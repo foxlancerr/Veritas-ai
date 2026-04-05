@@ -1,7 +1,10 @@
-import express from "express";
 import dotenv from "dotenv";
+dotenv.config();
+
+import express from "express";
+
 import cookieParser from "cookie-parser";
-import cors from "cors";
+
 import connectDB from "./config/connectDB.js";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
@@ -12,7 +15,6 @@ import { Server } from "socket.io";
 import notificationRouter from "./routes/notification.routes.js";
 import { allowCors } from "./middlewares/allowCors.js";
 
-dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8020;
 const server = http.createServer(app);
