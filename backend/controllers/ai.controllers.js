@@ -1,4 +1,4 @@
-import { ANTHROPIC, generateAIContent } from "../config/aiModal.js";
+import { ANTHROPIC, generateAIContent, queryHFModel } from "../config/aiModal.js";
 import { ANTHROPIC_MODEL_NAME } from "../constant/index.js";
 import Post from "../models/post.model.js";
 import Notification from "../models/notification.model.js";
@@ -94,3 +94,4 @@ export const generateAiSuggestion = async (req, res) => {
     });
   }
 };
+
