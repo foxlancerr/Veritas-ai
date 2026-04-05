@@ -6,6 +6,7 @@ import { UserDataContext } from "../context/UserContext";
 
 import ThemeChangeNavbar from "../components/ThemeChangeNavbar";
 import { VITE_BACKEND_API_URL } from "../../api/url_helper";
+import apiHelpers from "../../api/apiHelper";
 
 const Login = () => {
   const { getCurrentUser, getAllPosts } = useContext(UserDataContext);
@@ -24,10 +25,11 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post(`${VITE_BACKEND_API_URL}/auth/login`, formData, {
+      await apiHelpers.post(`/auth/login`, formData, {
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
       });
+      
 
       toast.success("Login successful!");
       resetForm();

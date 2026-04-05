@@ -7,18 +7,28 @@ import {
 } from "../controllers/post.controller.js";
 import upload from "../middlewares/multer.js";
 import isAuth from "../middlewares/isAuth.js";
-import { generateAIComment, generateAiSuggestion } from "../controllers/ai.controllers.js";
+import {
+  generateAIComment,
+  generateAiSuggestion,
+} from "../controllers/ai.controllers.js";
+import { aiModeration } from "../middlewares/aiModeration.js";
 
 // Define the post routes
 const postRoutes = express.Router();
 
 // Route for creating a post
-postRoutes.post("/create-post", isAuth, upload.single("image"), createPost);
+postRoutes.post(
+  "/create-post",
+  isAuth,
+  upload.single("image"),
+  aiModeration,
+  createPost,
+);
 postRoutes.get("/get-all-posts", isAuth, getALlPosts);
 postRoutes.get("/like/:id", isAuth, likePost);
-postRoutes.post("/comment/:id", isAuth, commentOnPost);
+postRoutes.post("/comment/:id", isAuth, aiModeration, commentOnPost);
 
 // ai comment suggestion route
-postRoutes.post("/suggest-posts", isAuth, generateAiSuggestion);
-postRoutes.get("/suggest-comment/:id", isAuth, generateAIComment);
+postRoutes.post("/suggest-posts", isAuth,aiModeration, generateAiSuggestion);
+postRoutes.get("/suggest-comment/:id", isAuth, aiModeration, generateAIComment);
 export default postRoutes;

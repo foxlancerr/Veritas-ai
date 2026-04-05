@@ -3,7 +3,8 @@ import axios from "axios";
 // import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { VITE_BACKEND_API_URL } from "../../api/url_helper";
-export const socket = io(VITE_BACKEND_API_URL.replace("/api", ""))
+import apiHelpers from "../../api/apiHelper";
+export const socket = io(VITE_BACKEND_API_URL.replace("/api", ""));
 
 // Context to import everywhere
 export const UserDataContext = createContext();
@@ -17,15 +18,11 @@ const UserContextProvider = ({ children }) => {
   // Fetch current user data
   const getCurrentUser = async () => {
     try {
-      const res = await axios.get(
-        `${VITE_BACKEND_API_URL}/user/get-current-user`,
-        {
-          withCredentials: true,
-        }
-      );
-      console.log(res.data.user);
+      const res = await apiHelpers.get(`/user/get-current-user`, {
+        withCredentials: true,
+      });
 
-      setUserData(res.data.user);
+      setUserData(res.user);
     } catch (error) {
       console.log("current user error:", error.message);
       setUserData(null); // fallback
@@ -35,14 +32,11 @@ const UserContextProvider = ({ children }) => {
   // Fetch all posts data
   const getAllPosts = async () => {
     try {
-      const res = await axios.get(
-        `${VITE_BACKEND_API_URL}/post/get-all-posts`,
-        {
-          withCredentials: true,
-        }
-      );
-      setAllPostsData(res.data.posts);
-      return res.data.posts;
+      const res = await apiHelpers.get(`/post/get-all-posts`, {
+        withCredentials: true,
+      });
+      setAllPostsData(res.posts);
+      return res.posts;
     } catch (error) {
       console.error("Error fetching posts:", error);
       return [];
@@ -52,13 +46,10 @@ const UserContextProvider = ({ children }) => {
   // get profile
   const handleGetProfile = async (userName, navigate) => {
     try {
-      const result = await axios.get(
-        `${VITE_BACKEND_API_URL}/user/profile/${userName}`,
-        {
-          withCredentials: true,
-        }
-      );
-      setProfileData(result.data.user);
+      const result = await apiHelpers.get(`/user/profile/${userName}`, {
+        withCredentials: true,
+      });
+      setProfileData(result.user);
       console.log(userName, "is called");
 
       //  const navigate = useNavigate()

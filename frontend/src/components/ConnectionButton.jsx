@@ -5,6 +5,7 @@ import { useContext, useEffect, useState } from "react";
 import { UserDataContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { VITE_BACKEND_API_URL } from "../../api/url_helper";
+import apiHelpers from "../../api/apiHelper";
 
 const socket = io(VITE_BACKEND_API_URL.replace("/api", ""));
 
@@ -18,12 +19,12 @@ const ConnectionButton = ({ userId }) => {
   const handleSendConnection = async () => {
     try {
       setLoading(true);
-      const result = await axios.post(
-        `${VITE_BACKEND_API_URL}/connection/send/${userId}`,
+      const result = await apiHelpers.post(
+        `/connection/send/${userId}`,
         {},
         { withCredentials: true }
       );
-      console.log(result);
+ 
       await handleGetStatus(); // Refresh status
     } catch (error) {
       console.log(error);
@@ -36,11 +37,11 @@ const ConnectionButton = ({ userId }) => {
   const handleRemoveConnection = async () => {
     try {
       setLoading(true);
-      const result = await axios.delete(
-        `${VITE_BACKEND_API_URL}/connection/remove/${userId}`,
+      const result = await apiHelpers.delete(
+        `/connection/remove/${userId}`,
         { withCredentials: true }
       );
-      console.log(result);
+     
       await handleGetStatus(); // Refresh status
     } catch (error) {
       console.log(error);
@@ -53,11 +54,11 @@ const ConnectionButton = ({ userId }) => {
   const handleGetStatus = async () => {
     if (!userData?._id) return;
     try {
-      const result = await axios.get(
-        `${VITE_BACKEND_API_URL}/connection/get-status/${userId}`,
+      const result = await apiHelpers.get(
+        `/connection/get-status/${userId}`,
         { withCredentials: true }
       );
-      setStatus(result.data.status);
+      setStatus(result.status);
       console.log(result);
     } catch (error) {
       console.log(error);

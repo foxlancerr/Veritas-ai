@@ -5,7 +5,8 @@ import toast from "react-hot-toast";
 import { UserDataContext } from "../context/UserContext";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import ThemeChangeNavbar from "../components/ThemeChangeNavbar";
-import {  VITE_BACKEND_API_URL } from "../../api/url_helper";
+import { VITE_BACKEND_API_URL } from "../../api/url_helper";
+import apiHelpers from "../../api/apiHelper";
 
 const Signup = () => {
   const { getCurrentUser, getAllPosts } = useContext(UserDataContext);
@@ -39,7 +40,7 @@ const Signup = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post(`${VITE_BACKEND_API_URL}/auth/signup`, formData, {
+      const result = await apiHelpers.post(`/auth/signup`, formData, {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
