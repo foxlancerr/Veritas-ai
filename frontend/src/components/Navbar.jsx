@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 
 import ToggleTheme from "./ToggleTheme";
 import { VITE_BACKEND_API_URL } from "../../api/url_helper";
+import apiHelpers from "../../api/apiHelper";
 
 const Navbar = () => {
   const { userData, handleGetProfile } = useContext(UserDataContext);
@@ -32,10 +33,11 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    axios.get(`${VITE_BACKEND_API_URL}/auth/logout`, {
+  const handleLogout = async () => {
+    await apiHelpers.get(`/auth/logout`, {
       withCredentials: true,
     });
+
     toast.success("Logout successful");
     // Clear user data from context
     userData(null);
@@ -43,12 +45,11 @@ const Navbar = () => {
 
   const handleSearch = async () => {
     try {
-      const result = await axios.get(
-        `${VITE_BACKEND_API_URL}/user/search?query=${searchInput}`,
-        { withCredentials: true }
-      );
-      setSearchData(result.data.users);
-      console.log(result.data.users);
+      const result = await apiHelpers.get(`/user/search?query=${searchInput}`, {
+        withCredentials: true,
+      });
+      setSearchData(result.users);
+      console.log(result.users);
     } catch (error) {
       console.error("Error searching user:", error);
       toast.error("Error searching user");

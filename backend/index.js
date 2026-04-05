@@ -2,8 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
-
 import cookieParser from "cookie-parser";
+
 
 import connectDB from "./config/connectDB.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -16,6 +16,10 @@ import notificationRouter from "./routes/notification.routes.js";
 import { allowCors } from "./middlewares/allowCors.js";
 
 const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 const PORT = process.env.PORT || 8020;
 const server = http.createServer(app);
 export const io = new Server(server, {
@@ -26,14 +30,12 @@ export const io = new Server(server, {
 });
 
 allowCors(app);
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
-app.use("/api/post", postRoutes);
 app.use("/api/connection", connectionRouter);
 app.use("/api/notification", notificationRouter);
+app.use("/api/post", postRoutes);
 
 export const userSocketMap = new Map();
 io.on("connection", (socket) => {

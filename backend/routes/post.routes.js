@@ -29,6 +29,6 @@ postRoutes.get("/like/:id", isAuth, likePost);
 postRoutes.post("/comment/:id", isAuth, aiModeration, commentOnPost);
 
 // ai comment suggestion route
-postRoutes.post("/suggest-posts", isAuth, generateAiSuggestion);
+postRoutes.post("/suggest-posts", isAuth,aiModeration, generateAiSuggestion);
 postRoutes.get("/suggest-comment/:id", isAuth, aiModeration, generateAIComment);
 export default postRoutes;

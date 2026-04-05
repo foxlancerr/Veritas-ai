@@ -8,6 +8,7 @@ import { MdOutlineNotificationsActive } from "react-icons/md";
 import { FaBellSlash } from "react-icons/fa";
 import { BsTrash3Fill } from "react-icons/bs";
 import { VITE_BACKEND_API_URL } from "../../api/url_helper";
+import apiHelpers from "../../api/apiHelper";
 
 const Notification = () => {
   const [notificationData, setNotificationData] = useState([]);
@@ -17,12 +18,11 @@ const Notification = () => {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const result = await axios.get(
-        `${VITE_BACKEND_API_URL}/notification/get-notifications`,
-        { withCredentials: true }
-      );
-      setNotificationData(result.data.notification);
-      console.log("Fetched notifications:", result.data.notification);
+      const result = await apiHelpers.get(`/notification/get-notifications`, {
+        withCredentials: true,
+      });
+      setNotificationData(result.notification);
+      console.log("Fetched notifications:", result.notification);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     } finally {
@@ -33,9 +33,10 @@ const Notification = () => {
   // Delete single notification
   const handleDeleteNotification = async (id) => {
     try {
-      await axios.delete(`${VITE_BACKEND_API_URL}/notification/delete-single/${id}`, {
+      const result = await apiHelpers.delete(`/notification/delete-single/${id}`, {
         withCredentials: true,
       });
+    
       setNotificationData((prev) => prev.filter((notify) => notify._id !== id));
     } catch (error) {
       console.error("Error deleting notification:", error);
@@ -45,9 +46,10 @@ const Notification = () => {
   // Clear all notifications
   const handleClearAllNotification = async () => {
     try {
-      await axios.delete(`${VITE_BACKEND_API_URL}/notification/delete-all`, {
+      const result =  await apiHelpers.delete(`/notification/delete-all`, {
         withCredentials: true,
       });
+     
       setNotificationData([]);
     } catch (error) {
       console.error("Error clearing notifications:", error);

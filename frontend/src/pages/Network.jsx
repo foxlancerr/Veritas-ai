@@ -5,6 +5,7 @@ import { FaUserCheck, FaUserTimes } from "react-icons/fa";
 
 import axios from "axios";
 import { VITE_BACKEND_API_URL } from "../../api/url_helper";
+import apiHelpers from "../../api/apiHelper";
 
 const Network = () => {
   const [connections, setConnections] = useState([]);
@@ -12,10 +13,10 @@ const Network = () => {
   //   handling get request
   const handleGetRequests = async () => {
     try {
-      const result = await axios.get(`${VITE_BACKEND_API_URL}/connection/requests`, {
+      const result = await apiHelpers.get(`/connection/requests`, {
         withCredentials: true,
       });
-      setConnections(result.data.request);
+      setConnections(result.request);
       console.log("connection ", result);
     } catch (error) {
       console.log(error);
@@ -25,12 +26,12 @@ const Network = () => {
   //   handle accept connection
   const handleAcceptConnection = async (requestId) => {
     try {
-      const result = await axios.put(
-        `${VITE_BACKEND_API_URL}/connection/accept/${requestId}`,
+      const result = await apiHelpers.put(
+        `/connection/accept/${requestId}`,
         {},
         {
           withCredentials: true,
-        }
+        },
       );
       console.log(result);
       setConnections(connections.filter((con) => con._id !== requestId));
@@ -42,12 +43,12 @@ const Network = () => {
   //   handle reject connection
   const handleRejectConnection = async (requestId) => {
     try {
-      const result = await axios.put(
-        `${VITE_BACKEND_API_URL}/connection/reject/${requestId}`,
+      const result = await apiHelpers.put(
+        `/connection/reject/${requestId}`,
         {},
         {
           withCredentials: true,
-        }
+        },
       );
       console.log(result);
       setConnections(connections.filter((con) => con._id !== requestId));

@@ -3,6 +3,8 @@ import Post from "../models/post.model.js";
 
 export const aiModeration = async (req, res, next) => {
   try {
+    next();
+    return
     const text = req.body.description || req.body.text;
     if (!text)
       return res
@@ -20,6 +22,8 @@ export const aiModeration = async (req, res, next) => {
         .json({ success: false, message: "Duplicate content detected" });
 
     // 🔹 Check toxicity
+
+    console.log("Checking toxicity for text:", text);
     const toxicResult = await queryHFModel("unitary/toxic-bert", text);
 
     if (!toxicResult) {

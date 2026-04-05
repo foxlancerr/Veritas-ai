@@ -28,6 +28,8 @@ export const generateAIContent = async (postDescription, token) => {
 // hugging face models
 export const queryHFModel = async (model, input) => {
   try {
+
+    console.log(`Querying Hugging Face model: ${model} with input: ${input}`);
     const response = await axios.post(
       `${HF_API_URL}${model}`,
       { inputs: input },
@@ -37,6 +39,7 @@ export const queryHFModel = async (model, input) => {
         },
       }
     );
+
     return response.data;
   } catch (error) {
    
