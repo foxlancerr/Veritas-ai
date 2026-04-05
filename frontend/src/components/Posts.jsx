@@ -6,12 +6,12 @@ import { BiLike } from "react-icons/bi";
 import { FaRegCommentDots } from "react-icons/fa6";
 import { LuSendHorizontal } from "react-icons/lu";
 import axios from "axios";
-import { useAuthContext } from "../context/AuthContext";
 import { useContext } from "react";
 import { socket, UserDataContext } from "../context/UserContext";
 import { useEffect } from "react";
 import ConnectionButton from "./ConnectionButton";
 import { useNavigate } from "react-router-dom";
+import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 const Posts = ({
   id,
   description,
@@ -24,7 +24,6 @@ const Posts = ({
   const { userData, setUserData, getAllPosts, handleGetProfile } =
     useContext(UserDataContext);
   const [readMore, setReadMore] = useState(false);
-  const { serverURL } = useAuthContext();
   const [likes, setLikes] = useState([]);
   const [commentContent, setCommentContent] = useState("");
   const [comments, setComments] = useState([]);
@@ -34,7 +33,7 @@ const Posts = ({
   // post like fucntion
   const handleLikePost = async () => {
     try {
-      const response = await axios.get(`${serverURL}/api/post/like/${id}`, {
+      const response = await axios.get(`${VITE_BACKEND_API_URL}/post/like/${id}`, {
         withCredentials: true,
       });
 
@@ -53,7 +52,7 @@ const Posts = ({
 
     try {
       const response = await axios.post(
-        `${serverURL}/api/post/comment/${id}`,
+        `${VITE_BACKEND_API_URL}/post/comment/${id}`,
         { content: commentContent },
         {
           withCredentials: true,
