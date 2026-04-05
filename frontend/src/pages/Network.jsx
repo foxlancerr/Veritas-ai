@@ -4,16 +4,15 @@ import emptyDp from "../assets/emptyDp.jpg";
 import { FaUserCheck, FaUserTimes } from "react-icons/fa";
 
 import axios from "axios";
-import { useAuthContext } from "../context/AuthContext";
+import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 
 const Network = () => {
   const [connections, setConnections] = useState([]);
-  const { serverURL } = useAuthContext();
 
   //   handling get request
   const handleGetRequests = async () => {
     try {
-      const result = await axios.get(`${serverURL}/api/connection/requests`, {
+      const result = await axios.get(`${VITE_BACKEND_API_URL}/connection/requests`, {
         withCredentials: true,
       });
       setConnections(result.data.request);
@@ -27,7 +26,7 @@ const Network = () => {
   const handleAcceptConnection = async (requestId) => {
     try {
       const result = await axios.put(
-        `${serverURL}/api/connection/accept/${requestId}`,
+        `${VITE_BACKEND_API_URL}/connection/accept/${requestId}`,
         {},
         {
           withCredentials: true,
@@ -44,7 +43,7 @@ const Network = () => {
   const handleRejectConnection = async (requestId) => {
     try {
       const result = await axios.put(
-        `${serverURL}/api/connection/reject/${requestId}`,
+        `${VITE_BACKEND_API_URL}/connection/reject/${requestId}`,
         {},
         {
           withCredentials: true,

@@ -1,15 +1,14 @@
 import { useContext, useState } from "react";
-import { useAuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { UserDataContext } from "../context/UserContext";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import ThemeChangeNavbar from "../components/ThemeChangeNavbar";
+import {  VITE_BACKEND_API_URL } from "../../api/url_helper";
 
 const Signup = () => {
   const { getCurrentUser, getAllPosts } = useContext(UserDataContext);
-  const { serverURL } = useAuthContext();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -40,7 +39,7 @@ const Signup = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post(`${serverURL}/api/auth/signup`, formData, {
+      await axios.post(`${VITE_BACKEND_API_URL}/auth/signup`, formData, {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",

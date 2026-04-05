@@ -1,9 +1,9 @@
 import { useState, useEffect, createContext } from "react";
-import { useAuthContext } from "./AuthContext";
 import axios from "axios";
 // import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-export const socket = io("http://localhost:8127");
+import { VITE_BACKEND_API_URL } from "../../api/url_helper";
+export const socket = io(VITE_BACKEND_API_URL.replace("/api", ""))
 
 // Context to import everywhere
 export const UserDataContext = createContext();
@@ -11,7 +11,6 @@ export const UserDataContext = createContext();
 const UserContextProvider = ({ children }) => {
   const [editProfile, setEditProfile] = useState(false);
   const [userData, setUserData] = useState(null);
-  const serverURL = useAuthContext();
   const [allPostsData, setAllPostsData] = useState([]);
   const [profileData, setProfileData] = useState([]);
 
@@ -19,7 +18,7 @@ const UserContextProvider = ({ children }) => {
   const getCurrentUser = async () => {
     try {
       const res = await axios.get(
-        `${serverURL.serverURL}/api/user/get-current-user`,
+        `${VITE_BACKEND_API_URL}/user/get-current-user`,
         {
           withCredentials: true,
         }
@@ -37,7 +36,7 @@ const UserContextProvider = ({ children }) => {
   const getAllPosts = async () => {
     try {
       const res = await axios.get(
-        `${serverURL.serverURL}/api/post/get-all-posts`,
+        `${VITE_BACKEND_API_URL}/post/get-all-posts`,
         {
           withCredentials: true,
         }
@@ -54,7 +53,7 @@ const UserContextProvider = ({ children }) => {
   const handleGetProfile = async (userName, navigate) => {
     try {
       const result = await axios.get(
-        `${serverURL.serverURL}/api/user/profile/${userName}`,
+        `${VITE_BACKEND_API_URL}/user/profile/${userName}`,
         {
           withCredentials: true,
         }

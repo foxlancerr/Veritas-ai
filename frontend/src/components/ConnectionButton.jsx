@@ -1,15 +1,15 @@
 import axios from "axios";
-import { useAuthContext } from "../context/AuthContext";
+
 import io from "socket.io-client";
 import { useContext, useEffect, useState } from "react";
 import { UserDataContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
+import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 
-const socket = io("http://localhost:8127");
+const socket = io(VITE_BACKEND_API_URL.replace("/api", ""));
 
 const ConnectionButton = ({ userId }) => {
   const { userData, setUserData } = useContext(UserDataContext);
-  const { serverURL } = useAuthContext();
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ const ConnectionButton = ({ userId }) => {
     try {
       setLoading(true);
       const result = await axios.post(
-        `${serverURL}/api/connection/send/${userId}`,
+        `${VITE_BACKEND_API_URL}/connection/send/${userId}`,
         {},
         { withCredentials: true }
       );
@@ -37,7 +37,7 @@ const ConnectionButton = ({ userId }) => {
     try {
       setLoading(true);
       const result = await axios.delete(
-        `${serverURL}/api/connection/remove/${userId}`,
+        `${VITE_BACKEND_API_URL}/connection/remove/${userId}`,
         { withCredentials: true }
       );
       console.log(result);
@@ -54,7 +54,7 @@ const ConnectionButton = ({ userId }) => {
     if (!userData?._id) return;
     try {
       const result = await axios.get(
-        `${serverURL}/api/connection/get-status/${userId}`,
+        `${VITE_BACKEND_API_URL}/connection/get-status/${userId}`,
         { withCredentials: true }
       );
       setStatus(result.data.status);

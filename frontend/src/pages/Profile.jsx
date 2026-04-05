@@ -6,14 +6,12 @@ import { FaPen } from "react-icons/fa6";
 import { UserDataContext } from "../context/UserContext";
 import { useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { useAuthContext } from "../context/AuthContext";
 import EditProfile from "../components/EditProfile";
 import Posts from "../components/Posts";
 import ConnectionButton from "../components/ConnectionButton";
 import { FaPlus, FaGraduationCap, FaBriefcase, FaTools } from "react-icons/fa";
 
 const Profile = () => {
-  const { serverURL } = useAuthContext();
   const {
     userData,
     editProfile,

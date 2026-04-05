@@ -4,7 +4,7 @@ import { UserDataContext } from "../context/UserContext";
 import emptyDp from "../assets/emptyDp.jpg";
 import { FiCamera, FiPlus } from "react-icons/fi";
 import axios from "axios";
-import { useAuthContext } from "../context/AuthContext";
+
 import {
   FaUser,
   FaUserTag,
@@ -16,9 +16,10 @@ import {
 import { FaGraduationCap } from "react-icons/fa";
 import { MdWorkOutline } from "react-icons/md";
 import { FaVenusMars, FaTools } from "react-icons/fa";
+import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 
 const EditProfile = () => {
-  const { serverURL } = useAuthContext();
+
   const [saving, setSaving] = useState(false);
   const { userData, setUserData, setEditProfile } = useContext(UserDataContext);
   const [firstName, setFirstName] = useState(userData?.firstName || "");
@@ -149,7 +150,7 @@ const EditProfile = () => {
       }
 
       let result = await axios.put(
-        `${serverURL}/api/user/update-profile`,
+        `${VITE_BACKEND_API_URL}/user/update-profile`,
         formData,
         { withCredentials: true }
       );

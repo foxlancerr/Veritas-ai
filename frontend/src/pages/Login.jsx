@@ -1,15 +1,14 @@
 import { useState, useContext } from "react";
-import { useAuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { UserDataContext } from "../context/UserContext";
 
 import ThemeChangeNavbar from "../components/ThemeChangeNavbar";
+import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 
 const Login = () => {
   const { getCurrentUser, getAllPosts } = useContext(UserDataContext);
-  const { serverURL } = useAuthContext();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -25,7 +24,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post(`${serverURL}/api/auth/login`, formData, {
+      await axios.post(`${VITE_BACKEND_API_URL}/auth/login`, formData, {
         withCredentials: true,
         headers: { "Content-Type": "application/json" },
       });

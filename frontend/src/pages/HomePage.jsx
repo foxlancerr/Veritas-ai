@@ -10,11 +10,13 @@ import { BsImage } from "react-icons/bs";
 import { useState } from "react";
 import { useRef } from "react";
 import axios from "axios";
-import { useAuthContext } from "../context/AuthContext";
 import Posts from "../components/Posts";
 import { useEffect } from "react";
 import ConnectionButton from "../components/ConnectionButton";
 import { useNavigate } from "react-router-dom";
+import { VITE_BACKEND_API_URL } from "../../api/url_helper";
+import { RiAiGenerate } from "react-icons/ri";
+import toast from "react-hot-toast";
 const HomePage = () => {
   const {
     userData,
@@ -23,12 +25,12 @@ const HomePage = () => {
     allPostsData,
     handleGetProfile,
   } = useContext(UserDataContext);
-  const { serverURL } = useAuthContext();
   const [frontendPostImage, setFrontendPostImage] = useState("");
   const [backendPostImage, setBackendPostImage] = useState("");
   const [description, setDescription] = useState("");
   const [showUploadPost, setShowUploadPost] = useState(false);
   const postImageRef = useRef();
+  const [aiLoading, setIsAiLoading] = useState(false);
 
   const [posting, setPosting] = useState(false);
   const [suggestedUsers, setSuggestedUsers] = useState([]);
@@ -49,9 +51,9 @@ const HomePage = () => {
         formData.append("image", backendPostImage);
       }
       let result = await axios.post(
-        `${serverURL}/api/post/create-post`,
+        `${VITE_BACKEND_API_URL}/post/create-post`,
         formData,
-        { withCredentials: true }
+        { withCredentials: true },
       );
       console.log(result);
       setPosting(false);
@@ -63,12 +65,37 @@ const HomePage = () => {
     }
   }
 
+  const handleAIGeneratePost = async () => {
+    try {
+      if (!description.trim()) {
+        toast.error("Please enter a post description to generate content.");
+        return;
+      }
+      setIsAiLoading(true);
+      let response = await axios.post(
+        `${VITE_BACKEND_API_URL}/post/suggest-posts`,
+        { aiPrompt: description },
+        { withCredentials: true },
+      );
+
+      setDescription(response.data.data.description); // 👈 fill textarea
+    } catch (error) {
+      console.error("Error generating AI post:", error);
+      toast.error("Failed to generate AI post. Please try again.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
   // handle getting suggested users
   const handleGetSuggestedUsers = async () => {
     try {
-      const result = await axios.get(`${serverURL}/api/user/suggest-users`, {
-        withCredentials: true,
-      });
+      const result = await axios.get(
+        `${VITE_BACKEND_API_URL}/user/suggest-users`,
+        {
+          withCredentials: true,
+        },
+      );
 
       console.log("suggested users", result.data.suggestedUser);
       setSuggestedUsers(result.data.suggestedUser);
@@ -146,76 +173,94 @@ const HomePage = () => {
       </section>
 
       {/* Create Post Modal Dark Background */}
-      {showUploadPost && (
-        <div className="w-full h-full bg-black fixed top-0 left-0 opacity-60 z-[100]" />
-      )}
 
       {/* Create Post Modal */}
       {showUploadPost && (
-        <div className="w-[90%] max-w-[500px] h-[550px] bg-white dark:bg-[#1a1a1a] text-black dark:text-white shadow-lg dark:shadow-xl rounded-lg fixed z-[200] p-5 top-[100px] flex flex-col gap-5 transition-colors duration-300">
-          {/* Close Button */}
-          <div className="absolute top-2 right-2">
-            <RxCross2
-              className="w-6 h-6 text-gray-800 dark:text-gray-200 cursor-pointer hover:text-red-500 transition"
-              onClick={() => setShowUploadPost(false)}
-            />
-          </div>
+        <>
+          <div className="w-full h-full bg-black fixed top-0 left-0 opacity-60 z-[100]" />
 
-          {/* Profile */}
-          <div className="flex items-center gap-3">
-            <div className="w-[70px] h-[70px] rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-lg">
-              <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-gray-900">
-                <img
-                  src={userData.profileImage || emptyDp}
-                  alt="profile image"
-                  className="w-full h-full object-cover rounded-full"
-                />
-              </div>
-            </div>
-            <div className="font-semibold text-[18px]">{`${userData.firstName} ${userData.lastName}`}</div>
-          </div>
-
-          {/* Textarea */}
-          <textarea
-            placeholder="What do you want to talk about..?"
-            className={`w-full ${
-              frontendPostImage ? "h-[200px]" : "h-[550px]"
-            } outline-none border-none p-3 resize-none text-lg bg-transparent text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400`}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          ></textarea>
-
-          <input type="file" hidden ref={postImageRef} onChange={handleImage} />
-
-          {/* Uploaded Image */}
-          <div className="w-full h-[300px] overflow-hidden flex justify-center items-center rounded-lg">
-            <img
-              src={frontendPostImage || ""}
-              alt=""
-              className="h-full rounded-lg"
-            />
-          </div>
-
-          {/* Footer Actions */}
-          <div className="flex flex-col mt-auto w-full">
-            <div className="p-3 flex items-center border-b border-gray-300 dark:border-gray-600">
-              <BsImage
-                className="w-6 h-6 text-gray-500 dark:text-gray-400 cursor-pointer"
-                onClick={() => postImageRef.current.click()}
+          <div className="w-[90%] max-w-[500px] h-[350px] bg-white dark:bg-[#1a1a1a] text-black dark:text-white shadow-lg dark:shadow-xl rounded-lg fixed z-[200] p-5 top-[100px] flex flex-col gap-5 transition-colors duration-300">
+            {/* Close Button */}
+            <div className="absolute top-2 right-2">
+              <RxCross2
+                className="w-6 h-6 text-gray-800 dark:text-gray-200 cursor-pointer hover:text-red-500 transition"
+                onClick={() => setShowUploadPost(false)}
               />
             </div>
 
-            <div className="flex justify-end items-center">
-              <button
-                className="w-[100px] h-[45px] rounded-full bg-[#24b2ff] hover:bg-[#1ca2e5] mt-4 text-white font-semibold transition"
-                onClick={handleUploadPost}
-                disabled={posting}
-              >
-                {posting ? "Posting..." : "Post"}
-              </button>
+            {/* Profile */}
+            <div className="flex items-center gap-3">
+              <div className="w-[70px] h-[70px] rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-lg">
+                <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-gray-900">
+                  <img
+                    src={userData.profileImage || emptyDp}
+                    alt="profile image"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                </div>
+              </div>
+              <div className="font-semibold text-[18px]">{`${userData.firstName} ${userData.lastName}`}</div>
+            </div>
+
+            {/* Textarea */}
+            <textarea
+              placeholder="What do you want to talk about..?"
+              className={`w-full ${
+                frontendPostImage ? "h-[200px]" : "h-[550px]"
+              } outline-none border-none p-3 resize-none text-lg bg-transparent text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400`}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            ></textarea>
+
+            <input
+              type="file"
+              hidden
+              ref={postImageRef}
+              onChange={handleImage}
+            />
+
+            {/* Uploaded Image */}
+
+            {frontendPostImage && (
+              <div className="w-full h-[300px] overflow-hidden flex justify-center items-center rounded-lg">
+                <img
+                  src={frontendPostImage || ""}
+                  alt=""
+                  className="h-full rounded-lg"
+                />
+              </div>
+            )}
+
+            {/* Footer Actions */}
+            <div className="flex flex-col mt-auto w-full">
+              <div className="p-3 flex items-center border-b border-gray-300 dark:border-gray-600">
+                <BsImage
+                  className="w-6 h-6 text-gray-500 dark:text-gray-400 cursor-pointer"
+                  onClick={() => postImageRef.current.click()}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 items-center">
+                <button
+                  type="button" // Important: type="button" so it doesn't submit the form
+                  onClick={handleAIGeneratePost}
+                  className={`p-1 rounded-full transition ${aiLoading ? "animate-pulse text-purple-300" : "text-purple-600 hover:bg-purple-100 dark:hover:bg-purple-900"}`}
+                  title="Generate AI Comment"
+                  disabled={aiLoading}
+                >
+                  <RiAiGenerate className="w-5 h-5" />
+                </button>
+                <button
+                  className="w-[100px] h-[45px] rounded-full bg-[#24b2ff] hover:bg-[#1ca2e5] text-white font-semibold transition"
+                  onClick={handleUploadPost}
+                  disabled={posting}
+                >
+                  {posting ? "Posting..." : "Post"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* ############# Post Show Section ############# */}

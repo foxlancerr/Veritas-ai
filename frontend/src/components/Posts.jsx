@@ -6,12 +6,16 @@ import { BiLike } from "react-icons/bi";
 import { FaRegCommentDots } from "react-icons/fa6";
 import { LuSendHorizontal } from "react-icons/lu";
 import axios from "axios";
-import { useAuthContext } from "../context/AuthContext";
 import { useContext } from "react";
 import { socket, UserDataContext } from "../context/UserContext";
 import { useEffect } from "react";
 import ConnectionButton from "./ConnectionButton";
 import { useNavigate } from "react-router-dom";
+import { VITE_BACKEND_API_URL } from "../../api/url_helper";
+import { RiAiGenerate } from "react-icons/ri";
+import toast from "react-hot-toast";
+import ReactMarkdown from "react-markdown";
+
 const Posts = ({
   id,
   description,
@@ -24,19 +28,22 @@ const Posts = ({
   const { userData, setUserData, getAllPosts, handleGetProfile } =
     useContext(UserDataContext);
   const [readMore, setReadMore] = useState(false);
-  const { serverURL } = useAuthContext();
   const [likes, setLikes] = useState([]);
   const [commentContent, setCommentContent] = useState("");
   const [comments, setComments] = useState([]);
   const [showComments, setShowComments] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
   const navigate = useNavigate();
 
   // post like fucntion
   const handleLikePost = async () => {
     try {
-      const response = await axios.get(`${serverURL}/api/post/like/${id}`, {
-        withCredentials: true,
-      });
+      const response = await axios.get(
+        `${VITE_BACKEND_API_URL}/post/like/${id}`,
+        {
+          withCredentials: true,
+        },
+      );
 
       setLikes(response.data.like);
     } catch (error) {
@@ -53,11 +60,11 @@ const Posts = ({
 
     try {
       const response = await axios.post(
-        `${serverURL}/api/post/comment/${id}`,
+        `${VITE_BACKEND_API_URL}/post/comment/${id}`,
         { content: commentContent },
         {
           withCredentials: true,
-        }
+        },
       );
       console.log("the comments before update", comments);
       setComments(response.data.post.comment);
@@ -66,6 +73,27 @@ const Posts = ({
       setCommentContent("");
     } catch (error) {
       console.error("Error commenting post:", error);
+    }
+  };
+
+  // Handle AI Comment Generation
+  const handleAiComment = async () => {
+    setIsAiLoading(true);
+    try {
+      const response = await axios.get(
+        `${VITE_BACKEND_API_URL}/post/suggest-comment/${id}`,
+        { withCredentials: true },
+      );
+
+      if (response.data.success) {
+        setCommentContent(response.data.suggestion);
+        toast.success("AI comment generated! ");
+      }
+    } catch (error) {
+      console.error("Error generating AI comment:", error);
+      toast.error("Failed to generate AI comment. Please try again.");
+    } finally {
+      setIsAiLoading(false);
     }
   };
 
@@ -132,7 +160,9 @@ const Posts = ({
           readMore ? "" : "line-clamp-3"
         }`}
       >
-        {description}
+        <div className="prose dark:prose-invert">
+          <ReactMarkdown>{description}</ReactMarkdown>
+        </div>
       </div>
       {description.length > 200 && (
         <button
@@ -195,6 +225,16 @@ const Posts = ({
           <FaRegCommentDots className="w-5 h-5" />
           <span>Comment</span>
         </button>
+
+        <button
+          type="button" // Important: type="button" so it doesn't submit the form
+          onClick={handleAiComment}
+          className={`p-1 rounded-full transition ${isAiLoading ? "animate-pulse text-purple-300" : "text-purple-600 hover:bg-purple-100 dark:hover:bg-purple-900"}`}
+          title="Generate AI Comment"
+          disabled={isAiLoading}
+        >
+          <RiAiGenerate className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Comments Section */}
@@ -239,7 +279,7 @@ const Posts = ({
                     </span>
                   </div>
                   <p className="text-sm mt-1 text-gray-800 dark:text-gray-200">
-                    {com.content}
+                    <ReactMarkdown>{com.content}</ReactMarkdown>
                   </p>
                 </div>
               </div>
