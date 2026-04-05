@@ -3,14 +3,13 @@ import Navbar from "../components/Navbar";
 import axios from "axios";
 import emptyDp from "../assets/emptyDp.jpg";
 import { RxCross2 } from "react-icons/rx";
-import { useAuthContext } from "../context/AuthContext";
 
 import { MdOutlineNotificationsActive } from "react-icons/md";
 import { FaBellSlash } from "react-icons/fa";
 import { BsTrash3Fill } from "react-icons/bs";
+import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 
 const Notification = () => {
-  const { serverURL } = useAuthContext();
   const [notificationData, setNotificationData] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -19,7 +18,7 @@ const Notification = () => {
     try {
       setLoading(true);
       const result = await axios.get(
-        `${serverURL}/api/notification/get-notifications`,
+        `${VITE_BACKEND_API_URL}/notification/get-notifications`,
         { withCredentials: true }
       );
       setNotificationData(result.data.notification);
@@ -34,7 +33,7 @@ const Notification = () => {
   // Delete single notification
   const handleDeleteNotification = async (id) => {
     try {
-      await axios.delete(`${serverURL}/api/notification/delete-single/${id}`, {
+      await axios.delete(`${VITE_BACKEND_API_URL}/notification/delete-single/${id}`, {
         withCredentials: true,
       });
       setNotificationData((prev) => prev.filter((notify) => notify._id !== id));
@@ -46,7 +45,7 @@ const Notification = () => {
   // Clear all notifications
   const handleClearAllNotification = async () => {
     try {
-      await axios.delete(`${serverURL}/api/notification/delete-all`, {
+      await axios.delete(`${VITE_BACKEND_API_URL}/notification/delete-all`, {
         withCredentials: true,
       });
       setNotificationData([]);

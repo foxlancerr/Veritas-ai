@@ -10,6 +10,7 @@ import connectionRouter from "./routes/connection.routes.js";
 import http from "http";
 import { Server } from "socket.io";
 import notificationRouter from "./routes/notification.routes.js";
+import { allowCors } from "./middlewares/allowCors.js";
 
 dotenv.config();
 const app = express();
@@ -22,13 +23,7 @@ export const io = new Server(server, {
   },
 });
 
-// middlewares
-app.use(
-  cors({
-    origin: "http://localhost:5173", // frontend port (Vite default)
-    credentials: true, // allow cookies to be sent
-  })
-);
+allowCors(app);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

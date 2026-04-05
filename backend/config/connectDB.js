@@ -1,8 +1,12 @@
 import mongoose from "mongoose";
 
 const connectDB = async () => {
+
+  const mongoURI = `${process.env.MONGO_URI}linkedin`;
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+
+    console.log("Connecting to MongoDB...", mongoURI);
+    await mongoose.connect(mongoURI);
     console.log("MongoDB connected");
   } catch (error) {
     console.error("MongoDB connection error:", error);

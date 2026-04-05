@@ -10,11 +10,11 @@ import { BsImage } from "react-icons/bs";
 import { useState } from "react";
 import { useRef } from "react";
 import axios from "axios";
-import { useAuthContext } from "../context/AuthContext";
 import Posts from "../components/Posts";
 import { useEffect } from "react";
 import ConnectionButton from "../components/ConnectionButton";
 import { useNavigate } from "react-router-dom";
+import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 const HomePage = () => {
   const {
     userData,
@@ -23,7 +23,6 @@ const HomePage = () => {
     allPostsData,
     handleGetProfile,
   } = useContext(UserDataContext);
-  const { serverURL } = useAuthContext();
   const [frontendPostImage, setFrontendPostImage] = useState("");
   const [backendPostImage, setBackendPostImage] = useState("");
   const [description, setDescription] = useState("");
@@ -49,7 +48,7 @@ const HomePage = () => {
         formData.append("image", backendPostImage);
       }
       let result = await axios.post(
-        `${serverURL}/api/post/create-post`,
+        `${VITE_BACKEND_API_URL}/post/create-post`,
         formData,
         { withCredentials: true }
       );
@@ -66,7 +65,7 @@ const HomePage = () => {
   // handle getting suggested users
   const handleGetSuggestedUsers = async () => {
     try {
-      const result = await axios.get(`${serverURL}/api/user/suggest-users`, {
+      const result = await axios.get(`${VITE_BACKEND_API_URL}/user/suggest-users`, {
         withCredentials: true,
       });
 

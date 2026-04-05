@@ -8,8 +8,9 @@ import axios from "axios";
 import { UserDataContext } from "../context/UserContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { useAuthContext } from "../context/AuthContext";
+
 import ToggleTheme from "./ToggleTheme";
+import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 
 const Navbar = () => {
   const { userData, handleGetProfile } = useContext(UserDataContext);
@@ -18,7 +19,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState("");
   const [searchData, setSearchData] = useState([]);
-  const serverURL = useAuthContext();
   const location = useLocation();
   const currentPath = location.pathname;
   // Close dropdown if clicked outside
@@ -33,7 +33,7 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = () => {
-    axios.get(`http://localhost:8127/api/auth/logout`, {
+    axios.get(`${VITE_BACKEND_API_URL}/auth/logout`, {
       withCredentials: true,
     });
     toast.success("Logout successful");
@@ -44,7 +44,7 @@ const Navbar = () => {
   const handleSearch = async () => {
     try {
       const result = await axios.get(
-        `${serverURL.serverURL}/api/user/search?query=${searchInput}`,
+        `${VITE_BACKEND_API_URL}/user/search?query=${searchInput}`,
         { withCredentials: true }
       );
       setSearchData(result.data.users);
