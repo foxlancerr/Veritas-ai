@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 import { RiAiGenerate } from "react-icons/ri";
 import toast from "react-hot-toast";
+import apiHelpers from "../../api/apiHelper";
 const HomePage = () => {
   const {
     userData,
@@ -50,12 +51,11 @@ const HomePage = () => {
       if (backendPostImage) {
         formData.append("image", backendPostImage);
       }
-      let result = await axios.post(
-        `${VITE_BACKEND_API_URL}/post/create-post`,
+      let result = await apiHelpers.post(
+        `/post/create-post`,
         formData,
         { withCredentials: true },
       );
-      console.log(result);
       setPosting(false);
       setShowUploadPost(false);
     } catch (error) {
@@ -72,16 +72,16 @@ const HomePage = () => {
         return;
       }
       setIsAiLoading(true);
-      let response = await axios.post(
-        `${VITE_BACKEND_API_URL}/post/suggest-posts`,
+      let response = await apiHelpers.post(
+        `/post/suggest-posts`,
         { aiPrompt: description },
         { withCredentials: true },
       );
 
-      setDescription(response.data.data.description); // 👈 fill textarea
+      setDescription(response.data.description); // 👈 fill textarea
     } catch (error) {
       console.error("Error generating AI post:", error);
-      toast.error("Failed to generate AI post. Please try again.");
+      
     } finally {
       setIsAiLoading(false);
     }
@@ -90,15 +90,15 @@ const HomePage = () => {
   // handle getting suggested users
   const handleGetSuggestedUsers = async () => {
     try {
-      const result = await axios.get(
-        `${VITE_BACKEND_API_URL}/user/suggest-users`,
+      const result = await apiHelpers.get(
+        `/user/suggest-users`,
         {
           withCredentials: true,
         },
       );
 
-      console.log("suggested users", result.data.suggestedUser);
-      setSuggestedUsers(result.data.suggestedUser);
+      console.log("suggested users", result.suggestedUser);
+      setSuggestedUsers(result.suggestedUser);
     } catch (error) {
       console.error("Error fetching suggested users:", error);
       alert("Failed to fetch suggested users. Please try again.");

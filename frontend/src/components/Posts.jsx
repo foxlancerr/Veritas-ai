@@ -15,6 +15,7 @@ import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 import { RiAiGenerate } from "react-icons/ri";
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
+import apiHelpers from "../../api/apiHelper";
 
 const Posts = ({
   id,
@@ -38,14 +39,13 @@ const Posts = ({
   // post like fucntion
   const handleLikePost = async () => {
     try {
-      const response = await axios.get(
-        `${VITE_BACKEND_API_URL}/post/like/${id}`,
-        {
-          withCredentials: true,
-        },
-      );
+      const response = await apiHelpers.get(`/post/like/${id}`, {
+        withCredentials: true,
+      });
 
-      setLikes(response.data.like);
+      console.log("like response", response);
+
+      setLikes(response.like || []); // 
     } catch (error) {
       console.error("Error liking post:", error);
     }
@@ -59,16 +59,14 @@ const Posts = ({
     }
 
     try {
-      const response = await axios.post(
-        `${VITE_BACKEND_API_URL}/post/comment/${id}`,
+      const response = await apiHelpers.post(
+        `/post/comment/${id}`,
         { content: commentContent },
         {
           withCredentials: true,
         },
       );
-      console.log("the comments before update", comments);
-      setComments(response.data.post.comment);
-      console.log("comments", comments);
+      setComments(response.post.comment);
 
       setCommentContent("");
     } catch (error) {
@@ -80,18 +78,17 @@ const Posts = ({
   const handleAiComment = async () => {
     setIsAiLoading(true);
     try {
-      const response = await axios.get(
-        `${VITE_BACKEND_API_URL}/post/suggest-comment/${id}`,
-        { withCredentials: true },
-      );
+      const response = await apiHelpers.get(`/post/suggest-comment/${id}`, {
+        withCredentials: true,
+      });
 
-      if (response.data.success) {
-        setCommentContent(response.data.suggestion);
+      if (response.success) {
+        setCommentContent(response.suggestion);
         toast.success("AI comment generated! ");
       }
     } catch (error) {
       console.error("Error generating AI comment:", error);
-      toast.error("Failed to generate AI comment. Please try again.");
+  
     } finally {
       setIsAiLoading(false);
     }

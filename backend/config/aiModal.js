@@ -1,4 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
+import axios from "axios";
+
 import { ANTHROPIC_API_KEY, ANTHROPIC_MODEL_NAME } from "../constant/index.js";
 
 export const ANTHROPIC = new Anthropic({

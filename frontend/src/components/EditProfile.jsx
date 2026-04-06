@@ -17,9 +17,9 @@ import { FaGraduationCap } from "react-icons/fa";
 import { MdWorkOutline } from "react-icons/md";
 import { FaVenusMars, FaTools } from "react-icons/fa";
 import { VITE_BACKEND_API_URL } from "../../api/url_helper";
+import apiHelpers from "../../api/apiHelper";
 
 const EditProfile = () => {
-
   const [saving, setSaving] = useState(false);
   const { userData, setUserData, setEditProfile } = useContext(UserDataContext);
   const [firstName, setFirstName] = useState(userData?.firstName || "");
@@ -50,11 +50,11 @@ const EditProfile = () => {
   const profileImage = useRef();
   const coverImage = useRef();
   const [frontendProfileImage, SetFrontendProfileImage] = useState(
-    userData.profileImage || emptyDp
+    userData.profileImage || emptyDp,
   );
   const [backendProfileImage, SetBackendProfileImage] = useState(null);
   const [frontendCoverImage, SetFrontendCoverImage] = useState(
-    userData.coverImage || null
+    userData.coverImage || null,
   );
   const [backendCoverImage, SetBackendCoverImage] = useState(null);
   //   function for add a skill
@@ -148,16 +148,11 @@ const EditProfile = () => {
       if (backendCoverImage) {
         formData.append("coverImage", backendCoverImage);
       }
+      const result = await apiHelpers.put(`/user/update-profile`, formData, {
+        withCredentials: true,
+      });
 
-      let result = await axios.put(
-        `${VITE_BACKEND_API_URL}/user/update-profile`,
-        formData,
-        { withCredentials: true }
-      );
-      console.log(formData);
-
-      console.log(result);
-      setUserData(result.data);
+      setUserData(result);
       setSaving(false);
       setEditProfile(false);
     } catch (error) {
