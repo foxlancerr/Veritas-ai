@@ -81,7 +81,7 @@ const HomePage = () => {
       setDescription(response.data.description); // 👈 fill textarea
     } catch (error) {
       console.error("Error generating AI post:", error);
-      toast.error("Failed to generate AI post. Please try again.");
+      
     } finally {
       setIsAiLoading(false);
     }

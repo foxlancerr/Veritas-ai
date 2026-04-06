@@ -53,8 +53,7 @@ const Signup = () => {
       await getAllPosts();
       navigate("/");
     } catch (err) {
-      const message = err.response?.data?.message || "Signup failed!";
-      toast.error(message);
+      console.log("Signup error:", err);
     } finally {
       setLoading(false);
     }

@@ -37,8 +37,7 @@ const Login = () => {
       await getAllPosts();
       navigate("/");
     } catch (err) {
-      const message = err.response?.data?.message || "Login failed!";
-      toast.error(message);
+     console.log("Login error:", err);
     } finally {
       setLoading(false);
     }
