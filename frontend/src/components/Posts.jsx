@@ -88,7 +88,7 @@ const Posts = ({
       }
     } catch (error) {
       console.error("Error generating AI comment:", error);
-      toast.error("Failed to generate AI comment. Please try again.");
+  
     } finally {
       setIsAiLoading(false);
     }

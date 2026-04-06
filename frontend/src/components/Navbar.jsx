@@ -52,7 +52,7 @@ const Navbar = () => {
       console.log(result.users);
     } catch (error) {
       console.error("Error searching user:", error);
-      toast.error("Error searching user");
+  
     }
   };
 

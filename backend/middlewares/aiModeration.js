@@ -1,71 +1,73 @@
-import { queryHFModel } from "../config/aiModal.js";
+import { Filter } from "bad-words";
+import stringSimilarity from "string-similarity";
 import Post from "../models/post.model.js";
+import { spamWordsList } from "../constant/index.js";
+
+const filter = new Filter();
+
+// add custom spam words
+filter.addWords(...spamWordsList);
 
 export const aiModeration = async (req, res, next) => {
   try {
-    next();
-    return
-    const text = req.body.description || req.body.text;
-    if (!text)
-      return res
-        .status(400)
-        .json({ success: false, message: "Text is required" });
+    let text = req.body.description || req.body.aiPrompt;
 
-    // 🔹 Check duplicate posts
-    const duplicate = await Post.exists({
-      description: { $regex: `^${text.trim()}$`, $options: "i" },
-    });
-
-    if (duplicate)
-      return res
-        .status(400)
-        .json({ success: false, message: "Duplicate content detected" });
-
-    // 🔹 Check toxicity
-
-    console.log("Checking toxicity for text:", text);
-    const toxicResult = await queryHFModel("unitary/toxic-bert", text);
-
-    if (!toxicResult) {
-      console.error("Toxicity check failed for text:", text);
-      return res
-        .status(500)
-        .json({ success: false, message: "Failed to check content" });
+    if (!text) {
+      return res.status(400).json({
+        success: false,
+        message: "Text is required",
+      });
     }
 
-    const isToxic = toxicResult?.some((t) => t.score > 0.5);
+    // normalize
+    text = text.toLowerCase().trim().replace(/\s+/g, " ");
 
-    // 🔹 Check spam (use Hugging Face spam classifier)
-    const spamResult = await queryHFModel(
-      "mrm8488/spanish_spam_classifier",
-      text,
+    // 🔹 1. Toxic + Spam words
+    if (filter.isProfane(text)) {
+      return res.status(400).json({
+        success: false,
+        message: "Spam or toxic content detected",
+      });
+    }
+
+    // 🔹 2. Regex spam detection
+    // 🔹 Escape special regex characters
+    const escapeRegex = (word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+    const spamPattern = new RegExp(
+      spamWordsList.map(escapeRegex).join("|"),
+      "i",
     );
-    if (!spamResult) {
-      console.error("Spam check failed for text:", text);
-      return res
-        .status(500)
-        .json({ success: false, message: "Failed to check content" });
+    if (spamPattern.test(text)) {
+      return res.status(400).json({
+        success: false,
+        message: "Spam detected",
+      });
     }
 
-    // If any flag is true, block the request
-    if (isToxic)
-      return res
-        .status(400)
-        .json({ success: false, message: "This post/comment is toxic" });
+    // 🔹 3. Duplicate / Similarity check
+    const posts = await Post.find({}, "description");
 
-    const isSpam = spamResult?.[0]?.label === "spam";
+    for (let post of posts) {
+      const existing = post.description.toLowerCase().trim();
 
-    if (isSpam)
-      return res
-        .status(400)
-        .json({ success: false, message: "This post/comment looks spammy" });
+      const similarity = stringSimilarity.compareTwoStrings(text, existing);
 
-    // If all clear, continue
+      if (similarity > 0.9) {
+        return res.status(400).json({
+          success: false,
+          message: "Duplicate content detected",
+        });
+      }
+    }
+
     next();
   } catch (error) {
-    console.error("AI moderation error:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Failed to check content" });
+    console.error("Moderation error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Moderation failed",
+    });
   }
 };
