@@ -1,4 +1,4 @@
-import genToken from "../config/genToken.js";
+import { genToken } from "../config/genToken.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 
@@ -70,7 +70,7 @@ const loginController = async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       user,
-      token
+      token,
     });
   } catch (error) {
     console.error("Login error:", error);
