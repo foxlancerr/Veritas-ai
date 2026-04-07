@@ -27,14 +27,6 @@ const signUpController = async (req, res) => {
       password: hashedPassword,
     });
 
-    const token = genToken(user._id);
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENVIRONMENT === "production",
-      sameSite: "strict",
-    });
-
     res.status(201).json({
       message: "Signup successful",
       user,
@@ -54,25 +46,31 @@ const loginController = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User is unauthenticated" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Incorrect password" });
+      return res.status(401).json({ message: "User is unauthenticated" });
     }
 
-    const token = genToken(user._id);
+    user.password = undefined; // Remove password before sending response
+    const token = genToken(user);
+
+    user.accessToken = token;
 
     res.cookie("token", token, {
-      httpOnly: true,
+      httpOnly: false,
       secure: process.env.NODE_ENVIRONMENT === "production",
       sameSite: "strict",
     });
 
+    user.password = undefined;
+
     res.status(200).json({
       message: "Login successful",
       user,
+      token
     });
   } catch (error) {
     console.error("Login error:", error);

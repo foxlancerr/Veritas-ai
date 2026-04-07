@@ -1,49 +1,43 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import UserContextProvider, { UserDataContext } from "./context/UserContext";
+
 import Signup from "./pages/SignUp";
 import Login from "./pages/Login";
 import HomePage from "./pages/HomePage";
-import { useContext } from "react";
-import { Toaster } from "react-hot-toast";
 import Network from "./pages/Network";
 import Profile from "./pages/Profile";
 import Notification from "./pages/Notification";
 
-const AppRoutes = () => {
-  const { userData } = useContext(UserDataContext);
+import { Toaster } from "react-hot-toast";
 
+import PrivateRoute from "./layout/PrivateRoute";
+import PublicRoute from "./layout/PublicRoute";
+import UserContextProvider from "./context/UserContext";
+
+const AppRoutes = () => {
   return (
     <Routes>
-      <Route
-        path="/signup"
-        element={userData ? <Navigate to="/" /> : <Signup />}
-      />
-      <Route
-        path="/"
-        element={userData ? <HomePage /> : <Navigate to="/login" />}
-      />
-      <Route
-        path="/login"
-        element={userData ? <Navigate to="/" /> : <Login />}
-      />
-      <Route
-        path="/network"
-        element={userData ? <Network /> : <Navigate to="/login" />}
-      />
-      <Route
-        path="/profile"
-        element={userData ? <Profile /> : <Navigate to="/login" />}
-      />
-      <Route
-        path="/notifications"
-        element={userData ? <Notification /> : <Navigate to="/login" />}
-      />
+      {/* 🌐 Public Routes */}
+      <Route element={<PublicRoute />}>
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+      </Route>
+
+      {/* 🔒 Private Routes */}
+      <Route element={<PrivateRoute />}>
+        <Route
+          element={
+            <UserContextProvider>
+              <Outlet />
+            </UserContextProvider>
+          }
+        >
+          <Route path="/" element={<HomePage />} />
+          <Route path="/network" element={<Network />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/notifications" element={<Notification />} />
+        </Route>
+      </Route>
     </Routes>
   );
 };
@@ -54,11 +48,9 @@ const App = () => {
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
 
       <AuthProvider>
-        <UserContextProvider>
-          <Router>
-            <AppRoutes />
-          </Router>
-        </UserContextProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
       </AuthProvider>
     </>
   );

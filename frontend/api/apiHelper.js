@@ -16,7 +16,7 @@ const apiHelpers = axios.create({
 apiHelpers.interceptors.request.use(
   (config) => {
     // Inject auth token if available
-    const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem("token");
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }

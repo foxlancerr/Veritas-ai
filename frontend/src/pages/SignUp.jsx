@@ -1,15 +1,11 @@
-import { useContext, useState } from "react";
+import {  useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import toast from "react-hot-toast";
-import { UserDataContext } from "../context/UserContext";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import ThemeChangeNavbar from "../components/ThemeChangeNavbar";
-import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 import apiHelpers from "../../api/apiHelper";
 
 const Signup = () => {
-  const { getCurrentUser, getAllPosts } = useContext(UserDataContext);
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -49,8 +45,6 @@ const Signup = () => {
 
       toast.success("Signup successful!");
       resetForm();
-      await getCurrentUser();
-      await getAllPosts();
       navigate("/");
     } catch (err) {
       console.log("Signup error:", err);

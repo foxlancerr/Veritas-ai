@@ -63,6 +63,7 @@ const UserContextProvider = ({ children }) => {
     getCurrentUser();
     getAllPosts();
   }, []);
+
   const value = {
     userData,
     setUserData,
