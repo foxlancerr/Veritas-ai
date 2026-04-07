@@ -1,16 +1,13 @@
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import toast from "react-hot-toast";
-import { UserDataContext } from "../context/UserContext";
 
 import ThemeChangeNavbar from "../components/ThemeChangeNavbar";
-import { VITE_BACKEND_API_URL } from "../../api/url_helper";
-import apiHelpers from "../../api/apiHelper";
+import { useAuthContext } from "../context/AuthContext";
 
 const Login = () => {
-  const { getCurrentUser, getAllPosts } = useContext(UserDataContext);
   const navigate = useNavigate();
+   const { login } = useAuthContext();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [show, setShow] = useState(false);
@@ -25,19 +22,15 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await apiHelpers.post(`/auth/login`, formData, {
-        withCredentials: true,
-        headers: { "Content-Type": "application/json" },
-      });
-      
-
-      toast.success("Login successful!");
-      resetForm();
-      await getCurrentUser();
-      await getAllPosts();
-      navigate("/");
+     const response = await login(formData.email, formData.password);
+   
+      if (response.success) {
+        toast.success("Login successful!");
+        resetForm();
+        navigate("/");
+      }
     } catch (err) {
-     console.log("Login error:", err);
+      console.log("Login error:", err);
     } finally {
       setLoading(false);
     }

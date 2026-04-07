@@ -1,10 +1,10 @@
 import jwt from "jsonwebtoken";
 
-const genToken = (userId) => {
-  const token = jwt.sign({id: userId }, process.env.JWT_SECRET, {
+const genToken = (user) => {
+  const token = jwt.sign({user}, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
   return token;
 };
 
-export default genToken
+export default genToken;

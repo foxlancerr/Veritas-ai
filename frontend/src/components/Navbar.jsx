@@ -4,14 +4,13 @@ import { IoNotificationsSharp, IoSearchSharp } from "react-icons/io5";
 import { FaUserGroup } from "react-icons/fa6";
 import { TiHome } from "react-icons/ti";
 import { useContext, useEffect, useRef, useState } from "react";
-import axios from "axios";
+
 import { UserDataContext } from "../context/UserContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 
 import ToggleTheme from "./ToggleTheme";
-import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 import apiHelpers from "../../api/apiHelper";
+import { useAuthContext } from "../context/AuthContext";
 
 const Navbar = () => {
   const { userData, handleGetProfile } = useContext(UserDataContext);
@@ -21,6 +20,7 @@ const Navbar = () => {
   const [searchInput, setSearchInput] = useState("");
   const [searchData, setSearchData] = useState([]);
   const location = useLocation();
+  const { logout: handleLogout } = useAuthContext();
   const currentPath = location.pathname;
   // Close dropdown if clicked outside
   useEffect(() => {
@@ -33,16 +33,6 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = async () => {
-    await apiHelpers.get(`/auth/logout`, {
-      withCredentials: true,
-    });
-
-    toast.success("Logout successful");
-    // Clear user data from context
-    userData(null);
-  };
-
   const handleSearch = async () => {
     try {
       const result = await apiHelpers.get(`/user/search?query=${searchInput}`, {
@@ -52,7 +42,6 @@ const Navbar = () => {
       console.log(result.users);
     } catch (error) {
       console.error("Error searching user:", error);
-  
     }
   };
 
@@ -175,7 +164,7 @@ const Navbar = () => {
           >
             <div className="w-full h-full rounded-full overflow-hidden bg-white">
               <img
-                src={userData.profileImage || emptyDp}
+                src={userData?.profileImage || emptyDp}
                 alt="Profile"
                 className="w-full h-full object-cover rounded-full"
               />
@@ -188,17 +177,17 @@ const Navbar = () => {
                 <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] mb-3">
                   <div className="w-full h-full rounded-full overflow-hidden bg-white">
                     <img
-                      src={userData.profileImage || emptyDp}
+                      src={userData?.profileImage || emptyDp}
                       alt="Profile"
                       className="w-full h-full object-cover rounded-full"
                     />
                   </div>
                 </div>
                 <h1 className="font-semibold text-base text-center mb-3 text-gray-800 dark:text-white">
-                  {`${userData.firstName} ${userData.lastName}`}
+                  {`${userData?.firstName} ${userData?.lastName}`}
                 </h1>
                 <button
-                  onClick={() => handleGetProfile(userData.userName, navigate)}
+                  onClick={() => handleGetProfile(userData?.userName, navigate)}
                   className="w-full text-[#2dc0ff] border border-[#2dc0ff] px-4 py-2 rounded-full font-medium hover:bg-blue-50 dark:hover:bg-[#1c3a4b] transition text-sm"
                 >
                   View Profile

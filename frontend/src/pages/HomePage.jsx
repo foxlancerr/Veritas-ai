@@ -60,7 +60,7 @@ const HomePage = () => {
       setShowUploadPost(false);
     } catch (error) {
       console.error("Error uploading post:", error);
-      alert("Failed to upload post. Please try again.");
+    
       setPosting(false);
     }
   }
@@ -101,7 +101,7 @@ const HomePage = () => {
       setSuggestedUsers(result.suggestedUser);
     } catch (error) {
       console.error("Error fetching suggested users:", error);
-      alert("Failed to fetch suggested users. Please try again.");
+   
     }
   };
   useEffect(() => {
@@ -118,7 +118,7 @@ const HomePage = () => {
         <div className="relative h-[120px] bg-gray-300 dark:bg-gray-700">
           <img
             src={
-              userData.coverImage ||
+              userData?.coverImage ||
               "https://via.placeholder.com/600x200?text=Cover+Image"
             }
             alt="Cover"
@@ -136,7 +136,7 @@ const HomePage = () => {
           <div className="absolute -top-[35px] left-5 w-[80px] h-[80px] rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-lg">
             <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-gray-900">
               <img
-                src={userData.profileImage || emptyDp}
+                src={userData?.profileImage || emptyDp}
                 alt="Profile"
                 className="w-full h-full object-cover rounded-full"
               />
@@ -154,13 +154,13 @@ const HomePage = () => {
         {/* User Info */}
         <div className="mt-12 px-5 pb-5">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-            {`${userData.firstName} ${userData.lastName}`}
+            {`${userData?.firstName} ${userData?.lastName}`}
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {userData.location}
+            {userData?.location}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {userData.headline || "No headline provided"}
+            {userData?.headline || "No headline provided"}
           </p>
 
           <button
@@ -193,13 +193,13 @@ const HomePage = () => {
               <div className="w-[70px] h-[70px] rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-lg">
                 <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-gray-900">
                   <img
-                    src={userData.profileImage || emptyDp}
+                    src={userData?.profileImage || emptyDp}
                     alt="profile image"
                     className="w-full h-full object-cover rounded-full"
                   />
                 </div>
               </div>
-              <div className="font-semibold text-[18px]">{`${userData.firstName} ${userData.lastName}`}</div>
+              <div className="font-semibold text-[18px]">{`${userData?.firstName} ${userData?.lastName}`}</div>
             </div>
 
             {/* Textarea */}
@@ -270,7 +270,7 @@ const HomePage = () => {
           <div className="w-[70px] h-[70px] rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-lg cursor-pointer">
             <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-[#1a1a1a] flex items-center justify-center">
               <img
-                src={userData.profileImage || emptyDp}
+                src={userData?.profileImage || emptyDp}
                 alt="profile image"
                 className="w-full h-full object-cover rounded-full"
               />
