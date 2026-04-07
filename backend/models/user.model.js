@@ -78,6 +78,13 @@ const userSchema = mongoose.Schema(
         ref: "User",
       },
     ],
+
+    accessToken: {
+      type: String,
+      default: "",
+    },
+
+
   },
   { timestamps: true }
 );
