@@ -1,8 +1,9 @@
 import Connection from "../models/connection.model.js";
 import User from "../models/user.model.js";
 
-import { io, userSocketMap } from "../index.js";
+import { io } from "../index.js";
 import Notification from "../models/notification.model.js";
+import { userSocketMap } from "../config/socket.js";
 
 // send connection request
 export const sendConnection = async (req, res) => {

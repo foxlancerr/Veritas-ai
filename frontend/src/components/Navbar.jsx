@@ -11,6 +11,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import ToggleTheme from "./ToggleTheme";
 import apiHelpers from "../../api/apiHelper";
 import { useAuthContext } from "../context/AuthContext";
+import Chatbot from "./Chatbot";
 
 const Navbar = () => {
   const { userData, handleGetProfile } = useContext(UserDataContext);
@@ -218,6 +219,8 @@ const Navbar = () => {
         {/* Theme Toggle */}
         <ToggleTheme />
       </div>
+
+      <Chatbot></Chatbot>
     </nav>
   );
 };
