@@ -26,7 +26,7 @@ const Posts = ({
   comment,
   createdAt,
 }) => {
-  const { userData, setUserData, getAllPosts, handleGetProfile } =
+  const { userData, handleGetProfile } =
     useContext(UserDataContext);
   const [readMore, setReadMore] = useState(false);
   const [likes, setLikes] = useState([]);

@@ -10,7 +10,7 @@ filter.addWords(...spamWordsList);
 
 export const aiModeration = async (req, res, next) => {
   try {
-    let text = req.body.description || req.body.aiPrompt;
+    let text = req?.body?.description || req?.body?.content || req?.body?.aiPrompt;
 
     if (!text) {
       return res.status(400).json({

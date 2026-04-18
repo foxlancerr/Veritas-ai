@@ -11,7 +11,7 @@ import {
   generateAIComment,
   generateAiSuggestion,
 } from "../controllers/ai.controllers.js";
-import { aiModeration } from "../middlewares/aiModeration.js";
+// import { aiModeration } from "../middlewares/aiModeration.js";
 
 // Define the post routes
 const postRoutes = express.Router();
@@ -21,14 +21,13 @@ postRoutes.post(
   "/create-post",
   isAuth,
   upload.single("image"),
-  aiModeration,
   createPost,
 );
 postRoutes.get("/get-all-posts", isAuth, getALlPosts);
 postRoutes.get("/like/:id", isAuth, likePost);
-postRoutes.post("/comment/:id", isAuth, aiModeration, commentOnPost);
+postRoutes.post("/comment/:id", isAuth, commentOnPost);
 
 // ai comment suggestion route
-postRoutes.post("/suggest-posts", isAuth,aiModeration, generateAiSuggestion);
-postRoutes.get("/suggest-comment/:id", isAuth, aiModeration, generateAIComment);
+postRoutes.post("/suggest-posts", isAuth, generateAiSuggestion);
+postRoutes.get("/suggest-comment/:id", isAuth, generateAIComment);
 export default postRoutes;

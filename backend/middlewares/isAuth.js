@@ -29,6 +29,9 @@ const isAuth = async (req, res, next) => {
    
     // ✅ 5. Attach user to request
     req.user = decoded.user;
+    req.userId = decoded.user;
+
+
 
     next();
   } catch (error) {

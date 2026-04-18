@@ -51,16 +51,19 @@ const HomePage = () => {
       if (backendPostImage) {
         formData.append("image", backendPostImage);
       }
-      let result = await apiHelpers.post(
-        `/post/create-post`,
-        formData,
-        { withCredentials: true },
-      );
-      setPosting(false);
-      setShowUploadPost(false);
+      let result = await apiHelpers.post(`/post/create-post`, formData, {
+        withCredentials: true,
+      });
+
+      if (result.success) {
+        toast.success("Post created successfully!");
+        setPosting(false);
+        setShowUploadPost(false);
+        setDescription("");
+      }
     } catch (error) {
       console.error("Error uploading post:", error);
-    
+
       setPosting(false);
     }
   }
@@ -81,7 +84,6 @@ const HomePage = () => {
       setDescription(response.data.description); // 👈 fill textarea
     } catch (error) {
       console.error("Error generating AI post:", error);
-      
     } finally {
       setIsAiLoading(false);
     }
@@ -90,18 +92,14 @@ const HomePage = () => {
   // handle getting suggested users
   const handleGetSuggestedUsers = async () => {
     try {
-      const result = await apiHelpers.get(
-        `/user/suggest-users`,
-        {
-          withCredentials: true,
-        },
-      );
+      const result = await apiHelpers.get(`/user/suggest-users`, {
+        withCredentials: true,
+      });
 
       console.log("suggested users", result.suggestedUser);
       setSuggestedUsers(result.suggestedUser);
     } catch (error) {
       console.error("Error fetching suggested users:", error);
-   
     }
   };
   useEffect(() => {
