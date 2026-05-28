@@ -150,6 +150,9 @@ const EditProfile = () => {
       }
       const result = await apiHelpers.put(`/user/update-profile`, formData, {
         withCredentials: true,
+        headers: {
+              "Content-Type": "multipart/form-data",
+        },
       });
 
       setUserData(result);

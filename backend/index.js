@@ -13,7 +13,6 @@ import http from "http";
 import notificationRouter from "./routes/notification.routes.js";
 import { allowCors } from "./middlewares/allowCors.js";
 import { setupSocket } from "./config/socket.js";
-import chatbotRouter from "./routes/chatbot.routes.js";
 
 const app = express();
 

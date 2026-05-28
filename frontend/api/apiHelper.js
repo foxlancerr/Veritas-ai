@@ -6,7 +6,7 @@ import { VITE_BACKEND_API_URL } from "./url_helper";
 // Create axios instance
 const apiHelpers = axios.create({
   baseURL: VITE_BACKEND_API_URL, // your API base URL
-  timeout: 10000, // optional
+  timeout: 20000, // optional
   headers: {
     "Content-Type": "application/json",
   },

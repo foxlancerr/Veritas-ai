@@ -4,8 +4,10 @@ import User from "../models/user.model.js";
 export const getCurrentUser = async (req, res) => {
   try {
     const user = req.user;
+
+    const currentUser = await User.findById(user._id).select("-password");
     res.status(200).json({
-      user,
+      user:currentUser,
     });
   } catch (error) {
     res.status(500).json({ message: "Error fetching user" });
@@ -16,6 +18,7 @@ export const updateProfile = async (req, res) => {
   try {
     const { firstName, lastName, userName, headline, location, gender } =
       req.body;
+
     const skills = req.body.skills ? JSON.parse(req.body.skills) : [];
     const education = req.body.education ? JSON.parse(req.body.education) : [];
     const experience = req.body.experience
