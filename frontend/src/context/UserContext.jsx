@@ -84,7 +84,6 @@ const UserContextProvider = ({ children }) => {
     socket.on("connect", onConnect);
 
     if (socket.connected) {
-      // Already connected (e.g. token just resolved) — register immediately
       socket.emit("register", userId);
     } else {
       socket.connect();
@@ -95,6 +94,21 @@ const UserContextProvider = ({ children }) => {
       socket.off("connect", onConnect);
     };
   }, [userData?._id]);
+
+  // Real-time feed: prepend new posts as they are created by any user
+  useEffect(() => {
+    const handleNewPost = (post) => {
+      setAllPostsData((prev) => {
+        // Guard against duplicates (e.g. creator receives their own socket event)
+        if (prev.some((p) => p._id?.toString() === post._id?.toString()))
+          return prev;
+        return [post, ...prev];
+      });
+    };
+
+    socket.on("newPost", handleNewPost);
+    return () => socket.off("newPost", handleNewPost);
+  }, []);
 
   const value = {
     userData,

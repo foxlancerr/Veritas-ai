@@ -57,9 +57,11 @@ const HomePage = () => {
 
       if (result.success) {
         toast.success("Post created successfully!");
-        setPosting(false);
         setShowUploadPost(false);
         setDescription("");
+        setFrontendPostImage("");
+        setBackendPostImage("");
+        setPosting(false);
       }
     } catch (error) {
       console.error("Error uploading post:", error);

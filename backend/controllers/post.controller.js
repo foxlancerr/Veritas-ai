@@ -21,10 +21,19 @@ export const createPost = async (req, res) => {
         description,
       });
     }
+
+    // Populate author so every client can render the card immediately
+    const populatedPost = await Post.findById(newPost._id)
+      .populate("author", "firstName lastName profileImage headline userName")
+      .populate("comment.user", "firstName lastName profileImage headline");
+
+    // Broadcast to every connected client so the feed updates in real-time
+    io.emit("newPost", populatedPost);
+
     return res.status(201).json({
       success: true,
       message: "Post created successfully",
-      post: newPost,
+      post: populatedPost,
     });
   } catch (error) {
     console.error("Error creating post:", error);
