@@ -1,9 +1,10 @@
 import Connection from "../models/connection.model.js";
 import User from "../models/user.model.js";
+import Notification from "../models/notification.model.js";
 
 import { io } from "../index.js";
-import Notification from "../models/notification.model.js";
 import { userSocketMap } from "../config/socket.js";
+import { createAndPopulateNotification } from "./notification.controllers.js";
 
 // send connection request
 export const sendConnection = async (req, res) => {
@@ -30,14 +31,25 @@ export const sendConnection = async (req, res) => {
         .json({ message: "Connection request already exist." });
     }
     const newRequest = await Connection.create({ sender, receiver: id });
-    //  socket io handling
-    let receiverSocketId = userSocketMap.get(id);
-    let senderSocketId = userSocketMap.get(sender);
+
+    // Persist notification and populate before socket emit
+    const notification = await createAndPopulateNotification({
+      receiver: id,
+      type: "connectionRequest",
+      relatedUser: sender,
+    });
+
+    // Socket — real-time updates
+    let receiverSocketId = userSocketMap.get(id.toString());
+    let senderSocketId = userSocketMap.get(sender.toString());
+
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("statusUpdate", {
         updatedUserId: sender,
         newStatus: "received",
       });
+      // Push fully populated notification to receiver
+      io.to(receiverSocketId).emit("newNotification", notification);
     }
     if (senderSocketId) {
       io.to(senderSocketId).emit("statusUpdate", {
@@ -58,47 +70,72 @@ export const sendConnection = async (req, res) => {
 export const acceptConnection = async (req, res) => {
   try {
     const { connectionId } = req.params;
-    const userId = req.userID;
-    const connection = await Connection.findById(connectionId);
+
+    // Populate so .sender and .receiver are ObjectId-friendly strings, not raw refs
+    const connection = await Connection.findById(connectionId)
+      .populate("sender", "_id")
+      .populate("receiver", "_id");
+
     if (!connection) {
       return res.status(404).json({ message: "Connection request not found." });
     }
-    if (connection.status != "pending") {
+    if (connection.status !== "pending") {
       return res
         .status(400)
-        .json({ message: "Connection request under processed." });
+        .json({ message: "Connection request already processed." });
     }
+
+    const senderId = connection.sender._id.toString();
+    const receiverId = connection.receiver._id.toString();
+
     connection.status = "accepted";
-    console.log("Creating notification with relatedUser:", userId);
-    await Notification.create({
-      receiver: connection.sender,
-      type: "connectionAccepted",
-      relatedUser: req.userId,
-    });
     await connection.save();
+
+    // Add each user to the other's connection list
     await User.findByIdAndUpdate(req.userId, {
-      $addToSet: { connection: connection.sender._id },
+      $addToSet: { connection: senderId },
     });
-    await User.findByIdAndUpdate(connection.sender._id, {
+    await User.findByIdAndUpdate(senderId, {
       $addToSet: { connection: req.userId },
     });
 
-    //  socket io handling
-    let receiverSocketId = userSocketMap.get(
-      connection.receiver._id.toString()
-    );
-    let senderSocketId = userSocketMap.get(connection.sender._id.toString());
+    // Notify the original sender that their request was accepted (populated for socket)
+    const notification = await createAndPopulateNotification({
+      receiver: senderId,
+      type: "connectionAccepted",
+      relatedUser: req.userId,
+    });
+
+    // Delete the stale connectionRequest notification for the acceptor (receiverId)
+    const staleNotif = await Notification.findOneAndDelete({
+      receiver: receiverId,
+      relatedUser: senderId,
+      type: "connectionRequest",
+    });
+
+    // Socket — real-time updates
+    const receiverSocketId = userSocketMap.get(receiverId);
+    const senderSocketId = userSocketMap.get(senderId);
+
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("statusUpdate", {
-        updatedUserId: connection.sender._id,
+        updatedUserId: senderId,
         newStatus: "disconnect",
       });
+      // Tell the acceptor's UI to remove the now-stale notification
+      if (staleNotif) {
+        io.to(receiverSocketId).emit("notificationDeleted", {
+          notificationId: staleNotif._id,
+        });
+      }
     }
     if (senderSocketId) {
       io.to(senderSocketId).emit("statusUpdate", {
         updatedUserId: req.userId,
         newStatus: "disconnect",
       });
+      // Push live notification to the original sender
+      io.to(senderSocketId).emit("newNotification", notification);
     }
 
     return res.status(200).json({ message: "Connection request accepted." });
@@ -174,6 +211,13 @@ export const rejectConnection = async (req, res) => {
     const senderId = connection.sender?._id.toString();
     const receiverId = connection.receiver?._id.toString();
 
+    // Delete the stale connectionRequest notification for the person who rejected (receiverId)
+    const staleNotif = await Notification.findOneAndDelete({
+      receiver: receiverId,
+      relatedUser: senderId,
+      type: "connectionRequest",
+    });
+
     // Real-time update
     const senderSocketId = userSocketMap.get(senderId);
     const receiverSocketId = userSocketMap.get(receiverId);
@@ -190,6 +234,12 @@ export const rejectConnection = async (req, res) => {
         updatedUserId: senderId,
         newStatus: "connect",
       });
+      // Remove the stale notification from the rejecter's UI
+      if (staleNotif) {
+        io.to(receiverSocketId).emit("notificationDeleted", {
+          notificationId: staleNotif._id,
+        });
+      }
     }
 
     return res.status(200).json({ message: "Connection request rejected." });

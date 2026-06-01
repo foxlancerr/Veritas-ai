@@ -29,7 +29,7 @@ const isAuth = async (req, res, next) => {
    
     // ✅ 5. Attach user to request
     req.user = decoded.user;
-    req.userId = decoded.user;
+    req.userId = decoded.user._id; // Always a plain ID string, not the full object
 
 
 

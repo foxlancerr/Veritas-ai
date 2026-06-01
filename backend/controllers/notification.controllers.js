@@ -1,5 +1,13 @@
 import Notification from "../models/notification.model.js";
 
+// Helper: create a notification and return it fully populated for socket emit
+export const createAndPopulateNotification = async (data) => {
+  const doc = await Notification.create(data);
+  return Notification.findById(doc._id)
+    .populate("relatedUser", "firstName lastName profileImage")
+    .populate("relatedPost", "image description");
+};
+
 // getting notifications
 export const getNotifications = async (req, res) => {
   try {
