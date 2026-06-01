@@ -1,24 +1,23 @@
-import Anthropic from "@anthropic-ai/sdk";
-import axios from "axios";
+import OpenAI from "openai";
+import { GROQ_API_KEY, GROQ_MODEL_NAME } from "../constant/index.js";
 
-import { ANTHROPIC_API_KEY, ANTHROPIC_MODEL_NAME } from "../constant/index.js";
-
-export const ANTHROPIC = new Anthropic({
-  apiKey: ANTHROPIC_API_KEY,
+const client = new OpenAI({
+  apiKey: GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
 });
 
-export const generateAIContent = async (postDescription, token) => {
-  // 1. Generate the Comment using Anthropic
-  const msg = await ANTHROPIC.messages.create({
-    model: ANTHROPIC_MODEL_NAME,
+export const generateAIContent = async (userMessage, token, systemPrompt = null) => {
+  const messages = [];
+  if (systemPrompt) {
+    messages.push({ role: "system", content: systemPrompt });
+  }
+  messages.push({ role: "user", content: userMessage });
+
+  const msg = await client.chat.completions.create({
+    model: GROQ_MODEL_NAME,
     max_tokens: token,
-    messages: [
-      {
-        role: "user",
-        content: postDescription,
-      },
-    ],
+    messages,
   });
 
-  return msg.content[0].text;
+  return msg.choices[0].message.content;
 };

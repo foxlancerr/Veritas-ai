@@ -1,12 +1,12 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-const ANTHROPIC_MODEL_NAME = process.env.ANTHROPIC_MODEL_NAME;
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const GROQ_MODEL_NAME = process.env.GROQ_MODEL_NAME;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 const PORTAL_CLOUDMERSIVE_API_KEY = process.env.PORTAL_CLOUDMERSIVE_API_KEY;
 
-export { ANTHROPIC_MODEL_NAME, ANTHROPIC_API_KEY, PORTAL_CLOUDMERSIVE_API_KEY };
+export { GROQ_MODEL_NAME, GROQ_API_KEY, PORTAL_CLOUDMERSIVE_API_KEY };
 
 export const spamWordsList = [
   // Marketing & Sales Spam

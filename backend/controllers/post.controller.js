@@ -1,7 +1,8 @@
 import uploadOnCloudinary from "../config/cloudinary.js";
 import { io } from "../index.js";
-import Notification from "../models/notification.model.js";
 import Post from "../models/post.model.js";
+import { userSocketMap } from "../config/socket.js";
+import { createAndPopulateNotification } from "./notification.controllers.js";
 // controller for creating a post
 export const createPost = async (req, res) => {
   try {
@@ -20,10 +21,19 @@ export const createPost = async (req, res) => {
         description,
       });
     }
+
+    // Populate author so every client can render the card immediately
+    const populatedPost = await Post.findById(newPost._id)
+      .populate("author", "firstName lastName profileImage headline userName")
+      .populate("comment.user", "firstName lastName profileImage headline");
+
+    // Broadcast to every connected client so the feed updates in real-time
+    io.emit("newPost", populatedPost);
+
     return res.status(201).json({
       success: true,
       message: "Post created successfully",
-      post: newPost,
+      post: populatedPost,
     });
   } catch (error) {
     console.error("Error creating post:", error);
@@ -69,20 +79,30 @@ export const likePost = async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    // ✅ Toggle like
-    if (post.like.includes(userId)) {
+    // Toggle like — use .toString() comparison to handle ObjectId vs string safely
+    const alreadyLiked = post.like.some(
+      (id) => id.toString() === userId.toString()
+    );
+
+    if (alreadyLiked) {
       // Already liked → unlike
-      post.like = post.like.filter((id) => id != userId);
+      post.like = post.like.filter(
+        (id) => id.toString() !== userId.toString()
+      );
     } else {
       // Not liked → like it
       post.like.push(userId);
-      if (post.author != userId) {
-        await Notification.create({
+      if (post.author.toString() !== userId.toString()) {
+        const notification = await createAndPopulateNotification({
           receiver: post.author,
           type: "like",
           relatedUser: userId,
           relatedPost: postId,
         });
+        const authorSocketId = userSocketMap.get(post.author.toString());
+        if (authorSocketId) {
+          io.to(authorSocketId).emit("newNotification", notification);
+        }
       }
     }
 
@@ -119,13 +139,17 @@ export const commentOnPost = async (req, res) => {
     )
       .populate("author", "firstName lastName profileImage headline")
       .populate("comment.user", "firstName lastName profileImage headline");
-    if (post.author != userId) {
-      await Notification.create({
-        receiver: post.author,
+    if (post.author._id.toString() !== userId.toString()) {
+      const notification = await createAndPopulateNotification({
+        receiver: post.author._id,
         type: "comment",
         relatedUser: userId,
         relatedPost: postId,
       });
+      const authorSocketId = userSocketMap.get(post.author._id.toString());
+      if (authorSocketId) {
+        io.to(authorSocketId).emit("newNotification", notification);
+      }
     }
     io.emit("commentAdded", { postId, comm: post.comment });
     return res.status(200).json({

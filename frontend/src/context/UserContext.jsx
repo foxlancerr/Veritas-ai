@@ -2,9 +2,14 @@ import { useState, useEffect, createContext } from "react";
 import axios from "axios";
 // import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import { VITE_BACKEND_API_URL } from "../../api/url_helper";
+import { VITE_BACKEND_WEB_SOCKET_URI } from "../../api/url_helper";
 import apiHelpers from "../../api/apiHelper";
-export const socket = io(VITE_BACKEND_API_URL.replace("/api", ""));
+
+// Single shared authenticated socket — does NOT auto-connect until we have a token
+export const socket = io(VITE_BACKEND_WEB_SOCKET_URI, {
+  auth: { token: localStorage.getItem("token") || "" },
+  autoConnect: false,
+});
 
 // Context to import everywhere
 export const UserDataContext = createContext();
@@ -62,6 +67,47 @@ const UserContextProvider = ({ children }) => {
   useEffect(() => {
     getCurrentUser();
     getAllPosts();
+  }, []);
+
+  // Connect the socket and keep userSocketMap current on every reconnect
+  useEffect(() => {
+    if (!userData?._id) return;
+
+    const userId = userData._id;
+
+    // Re-register on every (re)connect so the server map always has the latest socket.id
+    const onConnect = () => {
+      socket.emit("register", userId);
+    };
+
+    socket.auth = { token: localStorage.getItem("token") };
+    socket.on("connect", onConnect);
+
+    if (socket.connected) {
+      socket.emit("register", userId);
+    } else {
+      socket.connect();
+    }
+
+    // Do NOT disconnect here — would cause constant reconnect churn (confirmed in backend logs)
+    return () => {
+      socket.off("connect", onConnect);
+    };
+  }, [userData?._id]);
+
+  // Real-time feed: prepend new posts as they are created by any user
+  useEffect(() => {
+    const handleNewPost = (post) => {
+      setAllPostsData((prev) => {
+        // Guard against duplicates (e.g. creator receives their own socket event)
+        if (prev.some((p) => p._id?.toString() === post._id?.toString()))
+          return prev;
+        return [post, ...prev];
+      });
+    };
+
+    socket.on("newPost", handleNewPost);
+    return () => socket.off("newPost", handleNewPost);
   }, []);
 
   const value = {

@@ -1,13 +1,7 @@
-import axios from "axios";
-
-import io from "socket.io-client";
 import { useContext, useEffect, useState } from "react";
-import { UserDataContext } from "../context/UserContext";
+import { socket, UserDataContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
-import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 import apiHelpers from "../../api/apiHelper";
-
-const socket = io(VITE_BACKEND_API_URL.replace("/api", ""));
 
 const ConnectionButton = ({ userId }) => {
   const { userData, setUserData } = useContext(UserDataContext);
@@ -69,11 +63,10 @@ const ConnectionButton = ({ userId }) => {
   useEffect(() => {
     if (!userData?._id) return;
 
-    socket.emit("register", userData._id);
     handleGetStatus();
 
     const handleStatusUpdate = ({ updatedUserId, newStatus }) => {
-      if (updatedUserId === userId) {
+      if (updatedUserId.toString() === userId.toString()) {
         setStatus(newStatus);
       }
     };
