@@ -30,14 +30,12 @@ export function setupSocket(server) {
   io.on("connection", (socket) => {
 
     socket.on("register", (userId) => {
-      userSocketMap.set(userId, socket.id);
+      userSocketMap.set(userId.toString(), socket.id);
     });
-    socket.on("disconnect", (socket) => {});
 
     socket.on("chat-message", async (data) => {
       const { message, intent } = data;
       try {
-        // Call the controller
         const reply = await processChatMessage(socket.userId, message, intent);
         socket.emit("bot-reply", { content: reply });
       } catch (error) {
@@ -48,6 +46,8 @@ export function setupSocket(server) {
     });
 
     socket.on("disconnect", () => {
+      // Clean up stale map entry so future targeted emits don't misfire
+      if (socket.userId) userSocketMap.delete(socket.userId.toString());
       console.log(`User ${socket.userId} disconnected`);
     });
   });

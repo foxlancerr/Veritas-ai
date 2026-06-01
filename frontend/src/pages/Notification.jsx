@@ -1,14 +1,13 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
-import axios from "axios";
 import emptyDp from "../assets/emptyDp.jpg";
 import { RxCross2 } from "react-icons/rx";
 
 import { MdOutlineNotificationsActive } from "react-icons/md";
 import { FaBellSlash } from "react-icons/fa";
 import { BsTrash3Fill } from "react-icons/bs";
-import { VITE_BACKEND_API_URL } from "../../api/url_helper";
 import apiHelpers from "../../api/apiHelper";
+import { socket } from "../context/UserContext";
 
 const Notification = () => {
   const [notificationData, setNotificationData] = useState([]);
@@ -63,13 +62,42 @@ const Notification = () => {
         return "liked your post";
       case "comment":
         return "commented on your post";
+      case "connectionRequest":
+        return "sent you a connection request";
+      case "connectionAccepted":
+        return "accepted your connection request";
       default:
-        return "accepted your request";
+        return "sent you a notification";
     }
   };
 
   useEffect(() => {
     fetchNotifications();
+
+    // Prepend newly arriving notifications in real-time
+    const handleNew = (notification) => {
+      setNotificationData((prev) => {
+        // Avoid duplicates (e.g. if the REST fetch and socket race)
+        if (prev.some((n) => n._id?.toString() === notification._id?.toString()))
+          return prev;
+        return [notification, ...prev];
+      });
+    };
+
+    // Remove a notification that was resolved externally (e.g. request accepted in /network)
+    const handleDeleted = ({ notificationId }) => {
+      setNotificationData((prev) =>
+        prev.filter((n) => n._id?.toString() !== notificationId?.toString())
+      );
+    };
+
+    socket.on("newNotification", handleNew);
+    socket.on("notificationDeleted", handleDeleted);
+
+    return () => {
+      socket.off("newNotification", handleNew);
+      socket.off("notificationDeleted", handleDeleted);
+    };
   }, []);
 
   return (

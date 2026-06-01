@@ -1,6 +1,7 @@
 // context/AuthContext.jsx
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import apiHelpers from "../../api/apiHelper";
+import { socket } from "./UserContext";
 
 const AuthContext = createContext();
 
@@ -48,6 +49,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem("token");
     setUser(null);
+    if (socket.connected) socket.disconnect();
     window.location.replace("/login");
   };
 
