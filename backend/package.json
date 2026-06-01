@@ -10,7 +10,6 @@
   "author": "codingBySahil",
   "license": "ISC",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.82.0",
     "axios": "^1.14.0",
     "bad-words": "^4.0.0",
     "bcryptjs": "^3.0.2",
@@ -24,6 +23,7 @@
     "multer": "^2.0.2",
     "natural": "^8.1.1",
     "ollama": "^0.6.3",
+    "openai": "^6.40.0",
     "socket.io": "^4.8.1",
     "string-similarity": "^4.0.4"
   }
