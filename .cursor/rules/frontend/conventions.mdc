@@ -1,0 +1,133 @@
+---
+description: Frontend conventions – React 19, contexts, routing, API calls, state, best practices
+globs: frontend/src/**/*.{jsx,js}
+alwaysApply: false
+---
+
+# Frontend Conventions
+
+## Component Standards
+
+- All components are **functional** with hooks. Use `.jsx` for JSX files.
+- One default export per file. Co-locate state with the component that owns it.
+- Destructure props and context values at the top of the component.
+- Avoid `useEffect` with missing dependencies – always declare full dependency arrays.
+
+## Context Usage
+
+Two contexts exist. Use the right one:
+
+```jsx
+// Auth state – login/logout/user object
+import { useAuthContext } from "../context/AuthContext";
+const { user, loading, login, logout } = useAuthContext();
+
+// App data – user profile, posts, socket
+import { useContext } from "react";
+import { UserDataContext, socket } from "../context/UserContext";
+const { userData, allPostsData, profileData, editProfile, setEditProfile, handleGetProfile, getCurrentUser, getAllPosts } = useContext(UserDataContext);
+```
+
+`AuthProvider` wraps the entire app. `UserContextProvider` wraps only private routes.
+**Never** access `UserDataContext` inside `AuthProvider` directly or outside `PrivateRoute`.
+
+## API Calls – Always Use `apiHelpers`
+
+Never use raw `axios` in components. Use the shared instance which auto-injects the Bearer token:
+
+```js
+import apiHelpers from "../../api/apiHelper";
+
+// GET
+const res = await apiHelpers.get("/user/suggest-users", { withCredentials: true });
+
+// POST (JSON)
+const res = await apiHelpers.post("/connection/send/:id", {}, { withCredentials: true });
+
+// POST (multipart)
+const form = new FormData();
+form.append("image", file);
+form.append("description", text);
+const res = await apiHelpers.post("/post/create-post", form, { withCredentials: true });
+
+// DELETE
+const res = await apiHelpers.delete("/connection/remove/:userId", { withCredentials: true });
+```
+
+`apiHelpers` returns `response.data` directly – no `.data` unwrapping needed.
+All error toasts are shown automatically by the response interceptor.
+
+## Route Protection
+
+```jsx
+// PrivateRoute – redirects unauthenticated users to /login
+// PublicRoute  – redirects authenticated users to /
+
+// Both respect AuthContext.loading (show loading div until auth resolves)
+```
+
+Pages: `/ HomePage` · `/network` · `/profile` · `/notifications` → private  
+Pages: `/login` · `/signup` → public
+
+## Navigate to a User Profile
+
+Always use `handleGetProfile` from context – it fetches data and navigates:
+
+```jsx
+const { handleGetProfile } = useContext(UserDataContext);
+const navigate = useNavigate();
+
+handleGetProfile(user.userName, navigate); // fetches profile + goes to /profile
+```
+
+## Toast Notifications
+
+```js
+import toast from "react-hot-toast";
+toast.success("Post created!");
+toast.error("Something went wrong.");
+// Toaster is already in App.jsx (top-right, 3000ms)
+```
+
+## Socket Listeners
+
+The global `socket` from `UserContext` is for post events (likes, comments).
+Clean up every listener in the `useEffect` return:
+
+```jsx
+import { socket } from "../context/UserContext";
+
+useEffect(() => {
+  socket.on("likeUpdated", ({ postId, likes }) => { if (postId === id) setLikes(likes); });
+  return () => { socket.off("likeUpdated"); };
+}, [id]);
+```
+
+The `Chatbot` and `ConnectionButton` components each create their own separate socket connection.
+
+## Rendering Markdown
+
+Post descriptions and comments support Markdown:
+
+```jsx
+import ReactMarkdown from "react-markdown";
+
+<div className="prose dark:prose-invert">
+  <ReactMarkdown>{content}</ReactMarkdown>
+</div>
+```
+
+## Image Fallback
+
+```jsx
+import emptyDp from "../assets/emptyDp.jpg";
+<img src={user.profileImage || emptyDp} alt="..." />
+```
+
+## Date Formatting
+
+Use `moment` for relative timestamps:
+```js
+import moment from "moment";
+moment(createdAt).fromNow() // "3 minutes ago"
+```

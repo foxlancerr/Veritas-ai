@@ -1,0 +1,104 @@
+---
+description: Design system – Tailwind v4, dark mode, color tokens, layout, components, icons
+globs: frontend/src/**/*.{jsx,css}
+alwaysApply: false
+---
+
+# Design System
+
+## Tailwind v4 Setup
+
+```css
+/* index.css */
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+```
+
+Dark mode is **class-based** – `ToggleTheme` toggles `"dark"` on `document.documentElement` and persists to `localStorage("theme")`.
+Always pair every color with its dark variant:
+
+```jsx
+// ✅ Always paired
+className="bg-white dark:bg-[#1a1a1a] text-gray-800 dark:text-white border-gray-200 dark:border-gray-700"
+```
+
+## Background Tokens
+
+| Surface | Light | Dark |
+|---|---|---|
+| Page (home) | `bg-[#f0efe7]` | `dark:bg-gradient-to-br dark:from-[#121212] dark:to-black` |
+| Page (profile/other) | `bg-[#f3f2ef]` | `dark:bg-[#1a1a1a]` |
+| Navbar | `bg-white` | `dark:bg-[#1e1e1e]` |
+| Cards / main panels | `bg-white` | `dark:bg-[#1a1a1a]` or `dark:bg-[#1c1c1c]` |
+| Secondary panels | `bg-white` | `dark:bg-[#2a2a2a]` |
+| Dropdowns / modals | `bg-white` | `dark:bg-[#2c2c2c]` |
+| Chat messages area | `bg-gray-50` | `dark:bg-[#121212]` |
+| Input fields | `bg-gray-100` | `dark:bg-gray-800` |
+
+## Brand Color Tokens
+
+| Token | Value | Use |
+|---|---|---|
+| Primary | `#2dc0ff` / `#24b2ff` / `#18c5ff` | Active nav, CTA borders, link color |
+| Primary hover bg light | `hover:bg-blue-50` | Button hover |
+| Primary hover bg dark | `dark:hover:bg-[#083047]` or `dark:hover:bg-[#223344]` | Button hover dark |
+| Destructive | `#ec4545` | Sign out, delete |
+| Destructive hover dark | `dark:hover:bg-[#4a1f1f]` | Sign out dark hover |
+| AI / Generate | `text-purple-600` | AI action buttons |
+| AI hover | `hover:bg-purple-100 dark:hover:bg-purple-900` | AI button hover |
+
+## Profile Image Ring (canonical pattern)
+
+```jsx
+<div className="w-[80px] h-[80px] rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-lg">
+  <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-gray-900">
+    <img src={user.profileImage || emptyDp} alt="" className="w-full h-full object-cover rounded-full" />
+  </div>
+</div>
+```
+
+Common ring sizes: `w-10 h-10` · `w-12 h-12` · `w-16 h-16` · `w-[80px] h-[80px]`
+
+## Button Variants
+
+```jsx
+// Primary outline (most common)
+"px-4 py-2 rounded-full border border-[#2dc0ff] text-[#2dc0ff] hover:bg-blue-50 dark:hover:bg-[#083047] transition font-medium"
+
+// Primary filled
+"rounded-full bg-[#24b2ff] hover:bg-[#1ca2e5] text-white font-semibold transition"
+
+// Gradient filled (hero/chatbot)
+"rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-md transition"
+
+// Destructive outline
+"rounded-full border border-[#ec4545] text-[#ec4545] hover:bg-red-50 dark:hover:bg-[#4a1f1f] transition"
+```
+
+## Layout Rules
+
+- Navbar: `fixed top-0 h-[70px] z-50` → all pages need `pt-[80px]` to clear it.
+- Homepage 3-col: `w-full lg:w-[25%]` left + `w-full lg:w-[50%]` center + `w-full lg:w-[25%]` right.
+- Profile page: single centered column `max-w-[900px] px-4`.
+- Modals: `fixed z-[200]` content + `fixed top-0 left-0 w-full h-full bg-black opacity-60 z-[100]` overlay.
+- Chatbot: `fixed bottom-6 right-6 z-50`.
+
+## Icon Imports
+
+```js
+import { FiCamera, FiPlus } from "react-icons/fi";
+import { FaPen, FaUserGroup, FaGraduationCap, FaBriefcase, FaTools } from "react-icons/fa6";
+import { TiHome } from "react-icons/ti";
+import { IoNotificationsSharp, IoSearchSharp } from "react-icons/io5";
+import { BsSun, BsMoon } from "react-icons/bs";
+import { RiAiGenerate, RiAiGenerate2 } from "react-icons/ri";
+import { BiSolidLike, BiLike } from "react-icons/bi";
+import { FaRobot, FaPaperPlane, FaLightbulb, FaChartLine, FaWifi } from "react-icons/fa";
+import { RxCross2 } from "react-icons/rx";
+import { LuSendHorizontal } from "react-icons/lu";
+```
+
+## Transition Standard
+
+Apply `transition-colors duration-300` on containers that switch background between light/dark.
+Apply `transition` (shorthand) on interactive elements (buttons, links).

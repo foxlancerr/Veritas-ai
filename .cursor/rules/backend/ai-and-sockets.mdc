@@ -1,0 +1,92 @@
+---
+description: Backend AI features (Anthropic), Socket.IO setup, chatbot intents, and content moderation
+globs: backend/**/*.js
+alwaysApply: false
+---
+
+# AI & Socket.IO (Backend)
+
+## Anthropic – `generateAIContent`
+
+```js
+import { generateAIContent } from "../config/aiModal.js";
+
+const text = await generateAIContent(promptString, maxTokens);
+// Returns: string (first content block text from Claude)
+```
+
+Model and API key come from `process.env.ANTHROPIC_MODEL_NAME` / `ANTHROPIC_API_KEY` (via `constant/index.js`).
+
+### Token Budgets
+
+| Feature | Max Tokens |
+|---|---|
+| AI comment (`suggest-comment/:id`) | 100 |
+| AI post draft (`suggest-posts`) | 300 |
+| Chatbot response | 250 |
+
+Keep prompts short and instructional. Avoid large context payloads.
+
+## Chatbot – `processChatMessage`
+
+Located in `controllers/chatbot.controllers.js`. Called by the socket handler:
+
+```js
+// config/socket.js
+socket.on("chat-message", async ({ message, intent }) => {
+  const reply = await processChatMessage(socket.userId, message, intent);
+  socket.emit("bot-reply", { content: reply });
+});
+```
+
+### Intent Classification (no LLM cost)
+
+`classifyIntent(text)` uses regex – runs before any AI call:
+
+| Intent | Trigger keywords |
+|---|---|
+| `post_idea` | "post idea", "what to post", "suggest post", "content idea" |
+| `top_topics` | "trending", "top topic", "hot topic", "popular" |
+| `profile_stats` | "follower", "stats", "engagement", "my profile", "analytics" |
+| `latest_post` | "latest post", "last post", "recent post", "my last" |
+| `search` | "search", "find", "looking for" |
+| `general` | (default) |
+
+Response is truncated to 250 characters before returning to the client.
+
+## Socket.IO Setup
+
+```js
+// config/socket.js
+export const userSocketMap = new Map(); // userId (string) → socketId (string)
+export function setupSocket(server) { ... }
+
+// index.js
+export const io = setupSocket(server);
+```
+
+Socket auth middleware verifies JWT from `socket.handshake.auth.token` and sets `socket.userId`.
+
+Register users on connect:
+```js
+socket.on("register", (userId) => {
+  userSocketMap.set(userId, socket.id);
+});
+```
+
+## Content Moderation Middleware
+
+`middlewares/aiModeration.js` – checks `req.body.description | content | aiPrompt`:
+
+1. **Profanity/spam** – `bad-words` Filter + custom `spamWordsList` (from `constant/index.js`)
+2. **Regex pattern** – tests against escaped `spamWordsList`
+3. **Duplicate detection** – `string-similarity.compareTwoStrings` threshold `> 0.9` against all existing posts
+
+Returns `400 { success: false, message }` on failure; calls `next()` if clean.
+
+> Currently commented out in `post.routes.js`. To re-enable:
+> ```js
+> import { aiModeration } from "../middlewares/aiModeration.js";
+> postRoutes.post("/create-post", isAuth, upload.single("image"), aiModeration, createPost);
+> postRoutes.post("/comment/:id", isAuth, aiModeration, commentOnPost);
+> ```

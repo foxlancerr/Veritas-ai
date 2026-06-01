@@ -1,0 +1,104 @@
+---
+description: Backend coding conventions – ES modules, controllers, routes, models, middleware, security
+globs: backend/**/*.js
+alwaysApply: false
+---
+
+# Backend Conventions
+
+## Module System
+
+Always use ES Modules. Include `.js` in every local import.
+
+```js
+// ✅
+import User from "../models/user.model.js";
+export const myController = async (req, res) => {};
+
+// ❌ Never use require()
+```
+
+## Controller Shape
+
+Every controller is `async`, uses try/catch, and returns a consistent JSON envelope.
+
+```js
+export const myController = async (req, res) => {
+  try {
+    // ...
+    return res.status(200).json({ success: true, message: "Done", data });
+  } catch (error) {
+    console.error("myController:", error.message);
+    return res.status(500).json({ success: false, message: "Internal error" });
+  }
+};
+```
+
+- Use `req.userId` as the authenticated user ID string (set by `isAuth`).
+- Use `req.user` when you need the full decoded JWT object (e.g. `req.user._id`).
+- **Never send `password`** in any response. Strip with `.select("-password")` or `user.password = undefined`.
+- Always `return` on early responses to stop execution.
+
+## Route Conventions
+
+```js
+// POST   /create-<resource>
+// GET    /get-all-<resource>  |  /get-<resource>/:id  |  /profile/:param
+// PUT    /update-<resource>
+// DELETE /remove-<resource>/:id
+// GET    /get-status/:id  (for status checks)
+```
+
+Protect every route that needs authentication: `router.get("/...", isAuth, controller)`.
+Apply `upload` middleware before controllers that accept file uploads.
+
+## Middleware Application Order
+
+```js
+// Pattern for file upload routes
+router.put("/update-profile", isAuth, upload.fields([...]), controller);
+
+// Pattern for post creation
+router.post("/create-post", isAuth, upload.single("image"), controller);
+```
+
+`aiModeration` is available in `middlewares/aiModeration.js` (currently disabled in routes).
+Enable by adding it before any controller that accepts `description`, `content`, or `aiPrompt`.
+
+## Mongoose Models
+
+All schemas use `{ timestamps: true }`. Named + default export:
+```js
+export const User = mongoose.model("User", userSchema);
+export default User;
+```
+
+Use `$addToSet` to avoid duplicates in arrays; `$pull` to remove; `$push` to append.
+Always `.populate()` only the fields you need:
+```js
+.populate("author", "firstName lastName profileImage headline userName")
+```
+
+## Real-time Emissions
+
+```js
+import { io } from "../index.js";               // broadcast or targeted emits
+import { userSocketMap } from "../config/socket.js"; // userId → socketId map
+
+// Targeted (private)
+const sid = userSocketMap.get(userId.toString());
+if (sid) io.to(sid).emit("statusUpdate", { updatedUserId, newStatus });
+
+// Broadcast (all clients)
+io.emit("likeUpdated", { postId, likes: post.like });
+```
+
+Always check `if (sid)` before targeted emits.
+
+## Security Rules
+
+- Passwords hashed with `bcrypt.hash(password, 10)` on signup. Compare with `bcrypt.compare`.
+- JWT signed with `JWT_SECRET`, TTL 7 days. Use `genToken(user)` / `verifyToken(token)` from `config/genToken.js`.
+- Cookie set as `httpOnly: false`, `secure: true` in production (`NODE_ENVIRONMENT === "production"`), `sameSite: "strict"`.
+- CORS restricted to `http://localhost:5173` in development.
+- Never log full error objects in production; log `error.message`.

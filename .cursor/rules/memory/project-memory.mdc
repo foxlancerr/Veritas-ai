@@ -1,0 +1,116 @@
+---
+description: Core project memory – always-loaded context for the LinkedIn clone
+alwaysApply: true
+---
+
+# Project Memory – LinkedIn Clone
+
+> Full-stack LinkedIn-style social network. Real-time via Socket.IO. AI via Anthropic Claude. Dark/light theme.
+
+## Stack Snapshot
+
+| Layer | Tech |
+|---|---|
+| Runtime | Node.js + Express 5, ES Modules (`"type":"module"`) |
+| DB | MongoDB + Mongoose 8 (db name: `linkedin`) |
+| Auth | JWT 7d TTL · bcryptjs · cookie + Bearer |
+| Real-time | Socket.IO 4 |
+| AI | `@anthropic-ai/sdk` (Anthropic Claude) |
+| Storage | Cloudinary (multer → temp disk → upload → delete) |
+| Frontend | React 19 + Vite 7 |
+| Styling | Tailwind CSS v4 (`@tailwindcss/vite`, class-based dark mode) |
+| Routing | React Router DOM v7 |
+| HTTP | Axios via `frontend/api/apiHelper.js` (interceptors, auto-token) |
+
+## Ports & URLs
+
+| | Value |
+|---|---|
+| Backend | `http://localhost:8020` |
+| Frontend | `http://localhost:5173` |
+| Socket origin | `VITE_BACKEND_API_URL` minus `/api` |
+| API base env | `VITE_BACKEND_API_URL` (e.g. `http://localhost:8020/api`) |
+
+## Data Models (key fields)
+
+**User** – `firstName lastName userName(unique,lc) email(unique,lc) password profileImage coverImage headline skills[] education[{college,degree,fieldOfStudy}] experience[{title,company,description}] location gender connection[User] accessToken`
+
+**Post** – `author(User) description image like[User] comment[{content, user(User)}]`
+
+**Connection** – `sender(User) receiver(User) status(pending|accepted|rejected)`
+
+**Notification** – `receiver(User) type(like|comment|connectionAccepted) relatedUser(User) relatedPost(Post)`
+
+## API Route Map
+
+```
+POST  /api/auth/signup                  – register
+POST  /api/auth/login                   – login → JWT cookie + token body
+GET   /api/auth/logout                  – clear cookie
+
+GET   /api/user/get-current-user        – auth: req.user._id
+PUT   /api/user/update-profile          – multipart: profileImage, coverImage
+GET   /api/user/profile/:userName
+GET   /api/user/search?query=
+GET   /api/user/suggest-users
+
+POST  /api/post/create-post             – multipart: description, image
+GET   /api/post/get-all-posts
+GET   /api/post/like/:id                – toggle like
+POST  /api/post/comment/:id             – body: { content }
+POST  /api/post/suggest-posts           – body: { aiPrompt } → AI-drafted post
+GET   /api/post/suggest-comment/:id    – AI comment (saves + emits socket)
+
+POST  /api/connection/send/:id
+PUT   /api/connection/accept/:connectionId
+PUT   /api/connection/reject/:connectionId
+GET   /api/connection/get-status/:userId  → "connect"|"pending"|"received"|"disconnect"
+DELETE /api/connection/remove/:userId
+GET   /api/connection/requests
+GET   /api/connection/
+
+GET   /api/notification/               – fetch notifications
+```
+
+## Socket Event Map
+
+| Emitter | Event | Payload |
+|---|---|---|
+| Client→Server | `register` | `userId` |
+| Client→Server | `chat-message` | `{ message, intent }` |
+| Server→Client | `bot-reply` | `{ content }` |
+| Server→Client | `likeUpdated` | `{ postId, likes }` (broadcast) |
+| Server→Client | `commentAdded` | `{ postId, comm }` (broadcast) |
+| Server→Client | `statusUpdate` | `{ updatedUserId, newStatus }` (targeted) |
+
+`newStatus` values: `"connect"` `"pending"` `"received"` `"disconnect"`
+
+## Auth Flow (compressed)
+
+1. Login → backend sets cookie `token` + returns `{ user, token }` in body
+2. Frontend: `localStorage.setItem("token", token)` + sets `AuthContext.user`
+3. `apiHelpers` request interceptor injects `Authorization: Bearer <token>` on every request
+4. `isAuth` middleware: checks `req.cookies.token` first, then `Authorization` header → sets `req.userId` + `req.user`
+5. On app load: `AuthProvider` reads `localStorage.token` → calls `/user/get-current-user` → restores state
+6. Logout: clear `localStorage`, set user `null`, redirect `/login`
+
+## Key File Paths
+
+| Purpose | Path |
+|---|---|
+| Axios instance | `frontend/api/apiHelper.js` |
+| URL constants | `frontend/api/url_helper.js` |
+| Socket export | `frontend/src/context/UserContext.jsx` (`export const socket`) |
+| Auth context | `frontend/src/context/AuthContext.jsx` |
+| Data context | `frontend/src/context/UserContext.jsx` |
+| AI client | `backend/config/aiModal.js` (`generateAIContent`) |
+| Socket setup | `backend/config/socket.js` (`userSocketMap`, `setupSocket`) |
+| io instance | `backend/index.js` (`export const io`) |
+| JWT utils | `backend/config/genToken.js` (`genToken`, `verifyToken`) |
+| Constants | `backend/constant/index.js` (API keys, `spamWordsList`) |
+
+## Environment Variables
+
+**Backend** (`.env`): `PORT` `MONGO_URI` `JWT_SECRET` `NODE_ENVIRONMENT` `ANTHROPIC_API_KEY` `ANTHROPIC_MODEL_NAME` `CLOUDINAR_CLOUD_NAME` `CLOUDINAR_API_KEY` `CLOUDINAR_API_SECRET` `PORTAL_CLOUDMERSIVE_API_KEY`
+
+**Frontend** (`.env`): `VITE_BACKEND_API_URL`
