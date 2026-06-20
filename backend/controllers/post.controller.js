@@ -3,10 +3,22 @@ import { io } from "../index.js";
 import Post from "../models/post.model.js";
 import { userSocketMap } from "../config/socket.js";
 import { createAndPopulateNotification } from "./notification.controllers.js";
+import { fakeDetectionPost } from "../config/aiModal.js";
 // controller for creating a post
 export const createPost = async (req, res) => {
   try {
     const { description } = req.body;
+
+    // check the post is safe or not using groq moderation
+    const moderation = await fakeDetectionPost(description, 300);
+
+    if (!moderation.approved) {
+      return res.status(400).json({
+        success: false,
+        message: moderation.reason || "Post violates guidelines",
+        moderation,
+      });
+    }
     let newPost;
     if (req.file) {
       const image = await uploadOnCloudinary(req.file.path);
@@ -34,6 +46,7 @@ export const createPost = async (req, res) => {
       success: true,
       message: "Post created successfully",
       post: populatedPost,
+      moderation,
     });
   } catch (error) {
     console.error("Error creating post:", error);
@@ -81,14 +94,12 @@ export const likePost = async (req, res) => {
 
     // Toggle like — use .toString() comparison to handle ObjectId vs string safely
     const alreadyLiked = post.like.some(
-      (id) => id.toString() === userId.toString()
+      (id) => id.toString() === userId.toString(),
     );
 
     if (alreadyLiked) {
       // Already liked → unlike
-      post.like = post.like.filter(
-        (id) => id.toString() !== userId.toString()
-      );
+      post.like = post.like.filter((id) => id.toString() !== userId.toString());
     } else {
       // Not liked → like it
       post.like.push(userId);
@@ -132,10 +143,21 @@ export const commentOnPost = async (req, res) => {
     console.log("User ID from token:", req.userId);
 
     const { content } = req.body;
+
+    // check the post is safe or not using groq moderation
+    const moderation = await fakeDetectionPost(content, 300);
+
+    if (!moderation.approved) {
+      return res.status(400).json({
+        success: false,
+        message: moderation.reason || "Post violates guidelines",
+        moderation,
+      });
+    }
     const post = await Post.findByIdAndUpdate(
       postId,
       { $push: { comment: { content, user: userId } } },
-      { new: true }
+      { new: true },
     )
       .populate("author", "firstName lastName profileImage headline")
       .populate("comment.user", "firstName lastName profileImage headline");
@@ -155,6 +177,7 @@ export const commentOnPost = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Comment added successfully",
+      moderation,
       post,
     });
   } catch (error) {
@@ -166,6 +189,3 @@ export const commentOnPost = async (req, res) => {
     });
   }
 };
-
-
-
