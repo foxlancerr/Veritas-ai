@@ -1,4 +1,4 @@
-import {  generateAIContent } from "../config/aiModal.js";
+import { generateAIContent, fakeDetectionPost } from "../config/aiModal.js";
 import Post from "../models/post.model.js";
 import Notification from "../models/notification.model.js";
 import { io } from "../index.js";
@@ -15,6 +15,16 @@ export const generateAIComment = async (req, res) => {
         .json({ success: false, message: "Post not found" });
     }
 
+    // check the post is safe or not using groq moderation
+    const moderation = await fakeDetectionPost(postExists.description, 300);
+
+    if (!moderation.approved) {
+      return res.status(400).json({
+        success: false,
+        message: moderation.reason || "Post violates guidelines",
+        moderation,
+      });
+    }
     const postDescription = `Write a short, engaging LinkedIn comment for this post: "${postExists.description}". Return ONLY the comment text.`;
 
     // 1. Generate the Comment using Anthropic
@@ -48,6 +58,7 @@ export const generateAIComment = async (req, res) => {
       message: "AI Comment generated and added successfully",
       suggestion: aiContent, // Useful if you want to show it specifically in a toast
       post: updatedPost,
+      moderation,
     });
   } catch (error) {
     console.error("Error in generateAIComment:", error);
@@ -73,7 +84,16 @@ export const generateAiSuggestion = async (req, res) => {
 
     const postDescription = `Write a short, engaging LinkedIn post based on this prompt: "${aiPrompt}". Return ONLY the post text.`;
 
-    // 🔥 Generate post from AI
+    // check the post is safe or not using groq moderation
+    const moderation = await fakeDetectionPost(aiPrompt, 300);
+
+    if (!moderation.approved) {
+      return res.status(400).json({
+        success: false,
+        message: moderation.reason || "Post violates guidelines",
+        moderation,
+      });
+    }
     // 1. Generate the Comment using Anthropic
     const aiContent = await generateAIContent(postDescription, 300);
 
@@ -82,6 +102,7 @@ export const generateAiSuggestion = async (req, res) => {
       message: "AI post generated successfully",
       data: {
         description: aiContent,
+        ...moderation,
       },
     });
   } catch (error) {
@@ -93,4 +114,3 @@ export const generateAiSuggestion = async (req, res) => {
     });
   }
 };
-
