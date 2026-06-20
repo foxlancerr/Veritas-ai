@@ -53,6 +53,9 @@ const HomePage = () => {
       }
       let result = await apiHelpers.post(`/post/create-post`, formData, {
         withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       if (result.success) {

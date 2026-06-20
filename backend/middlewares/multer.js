@@ -3,9 +3,9 @@ import path from "path";
 import crypto from "crypto";
 
 let storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "./public"); // better than public
-  },
+  // destination: (req, file, cb) => {
+  //   cb(null, "./public"); // better than public
+  // },
 
   filename: (req, file, cb) => {
     // generate unique name
