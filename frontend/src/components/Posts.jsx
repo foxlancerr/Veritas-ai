@@ -26,8 +26,7 @@ const Posts = ({
   comment,
   createdAt,
 }) => {
-  const { userData, handleGetProfile } =
-    useContext(UserDataContext);
+  const { userData, handleGetProfile } = useContext(UserDataContext);
   const [readMore, setReadMore] = useState(false);
   const [likes, setLikes] = useState([]);
   const [commentContent, setCommentContent] = useState("");
@@ -45,7 +44,7 @@ const Posts = ({
 
       console.log("like response", response);
 
-      setLikes(response.like || []); // 
+      setLikes(response.like || []); //
     } catch (error) {
       console.error("Error liking post:", error);
     }
@@ -88,9 +87,32 @@ const Posts = ({
       }
     } catch (error) {
       console.error("Error generating AI comment:", error);
-  
     } finally {
       setIsAiLoading(false);
+    }
+  };
+
+  const [verifyLoading, setVerifyLoading] = useState(false);
+
+  // Handle AI Comment Generation
+  const handleVerifyPost = async () => {
+    setVerifyLoading(true);
+    try {
+      const response = await apiHelpers.get(`/post/verify-content/${id}`, {
+        withCredentials: true,
+      });
+
+      if (response.success) {
+        toast.success(
+          response.moderation.approved
+            ? "Post content is appropriate"
+            : `Post flagged: ${response.moderation.reason}`,
+        );
+      }
+    } catch (error) {
+      console.error("Error verifying post content:", error);
+    } finally {
+      setVerifyLoading(false);
     }
   };
 
@@ -144,6 +166,22 @@ const Posts = ({
             </p>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={handleVerifyPost}
+          disabled={verifyLoading}
+          title="Verify post content with AI"
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200
+    ${
+      verifyLoading
+        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+        : "bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 text-white hover:scale-105 hover:shadow-lg active:scale-95"
+    }
+  `}
+        >
+          {verifyLoading ? "Verifying..." : "Verify Post"}
+        </button>
 
         {/* Connection Button */}
         {userData._id !== author._id && (
