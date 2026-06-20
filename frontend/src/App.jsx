@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Outlet,
+} from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 
 import Signup from "./pages/SignUp";
@@ -13,6 +18,7 @@ import { Toaster } from "react-hot-toast";
 import PrivateRoute from "./layout/PrivateRoute";
 import PublicRoute from "./layout/PublicRoute";
 import UserContextProvider from "./context/UserContext";
+import { NotificationContextProvider } from "./context/notificationContext";
 
 const AppRoutes = () => {
   return (
@@ -28,7 +34,9 @@ const AppRoutes = () => {
         <Route
           element={
             <UserContextProvider>
-              <Outlet />
+              <NotificationContextProvider>
+                <Outlet />
+              </NotificationContextProvider>
             </UserContextProvider>
           }
         >

@@ -12,6 +12,7 @@ import ToggleTheme from "./ToggleTheme";
 import apiHelpers from "../../api/apiHelper";
 import { useAuthContext } from "../context/AuthContext";
 import Chatbot from "./Chatbot";
+import { useNotification } from "../context/notificationContext";
 
 const Navbar = () => {
   const { userData, handleGetProfile } = useContext(UserDataContext);
@@ -23,6 +24,7 @@ const Navbar = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const { logout: handleLogout } = useAuthContext();
+  const { notificationCount, fetchNotifications } = useNotification();
   const currentPath = location.pathname;
   // Close dropdown if clicked outside
   useEffect(() => {
@@ -56,42 +58,10 @@ const Navbar = () => {
     }
   }, [searchInput]);
 
-  // Fetch unread count once userData is ready
   useEffect(() => {
-    if (!userData?._id) return;
-    apiHelpers
-      .get("/notification/get-notifications", { withCredentials: true })
-      .then((res) => setUnreadCount(res.notification?.length || 0))
-      .catch(() => {});
-  }, [userData?._id]);
-
-  // Live unread badge updates
-  useEffect(() => {
-    // Only count as unread when the user is NOT already looking at the notifications page
-    const handleNew = () => {
-      if (window.location.pathname !== "/notifications") {
-        setUnreadCount((c) => c + 1);
-      }
-    };
-
-    // A notification was removed (e.g. connection request accepted/rejected)
-    const handleDeleted = () => {
-      setUnreadCount((c) => Math.max(0, c - 1));
-    };
-
-    socket.on("newNotification", handleNew);
-    socket.on("notificationDeleted", handleDeleted);
-
-    return () => {
-      socket.off("newNotification", handleNew);
-      socket.off("notificationDeleted", handleDeleted);
-    };
+    fetchNotifications();
   }, []);
 
-  // Clear badge when the user visits the notifications page
-  useEffect(() => {
-    if (currentPath === "/notifications") setUnreadCount(0);
-  }, [currentPath]);
   return (
     <nav className="w-full h-[70px] bg-white dark:bg-[#1e1e1e] fixed top-0 shadow-md dark:shadow-sm z-50 flex items-center justify-between md:justify-around px-4 md:px-8 transition-colors duration-300">
       {/* Left: Logo + Search */}
@@ -193,9 +163,9 @@ const Navbar = () => {
         >
           <div className="relative">
             <IoNotificationsSharp className="text-2xl" />
-            {unreadCount > 0 && (
+            {notificationCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-[3px]">
-                {unreadCount > 99 ? "99+" : unreadCount}
+                {notificationCount > 99 ? "99+" : notificationCount}
               </span>
             )}
           </div>
