@@ -7,6 +7,7 @@ import { MdPersonSearch } from "react-icons/md";
 import apiHelpers from "../../api/apiHelper";
 import { socket, UserDataContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../context/notificationContext";
 
 const Network = () => {
   const { userData, handleGetProfile } = useContext(UserDataContext);
@@ -16,6 +17,7 @@ const Network = () => {
   const [loadingConns, setLoadingConns] = useState(true);
   const [activeTab, setActiveTab] = useState("invitations"); // "invitations" | "connections"
   const navigate = useNavigate();
+  const { fetchNotifications } = useNotification();
 
   // ── Fetch pending invitations ──────────────────────────────────────────────
   const fetchInvitations = async () => {
@@ -58,6 +60,7 @@ const Network = () => {
       // Remove from invitations, refresh connections list
       setInvitations((prev) => prev.filter((c) => c._id !== requestId));
       fetchConnections();
+      fetchNotifications(); 
     } catch (error) {
       console.log(error);
     }

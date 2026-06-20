@@ -9,8 +9,6 @@ export const createPost = async (req, res) => {
   try {
     const { description } = req.body;
 
-    
-
     // check the post is safe or not using groq moderation
     const moderation = await fakeDetectionPost(description, 300);
 
@@ -187,6 +185,58 @@ export const commentOnPost = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to comment on post",
+      error: error.message,
+    });
+  }
+};
+
+
+export const verifyContentWithAi = async (req, res) => {
+  try {
+    const postId = req.params.id;
+
+      // 1. Fetch post
+    const post = await Post.findById(postId).populate(
+      "author",
+      "firstName lastName",
+    );
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    const content = post.description || "";
+
+    if (!content.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Post has no content to verify",
+      });
+    }
+
+    // check the post is safe or not using groq moderation
+    const moderation = await fakeDetectionPost(content, 300);
+
+    if (!moderation.approved) {
+      return res.status(400).json({
+        success: false,
+        message: moderation.reason || "Post violates guidelines",
+        moderation,
+      });
+    }
+    // 4. Response
+    return res.status(200).json({
+      success: true,
+      moderation,
+    });
+  } catch (error) {
+    console.error("Error in verifyContentWithAi:", error);
+    return res.status(500).json({
+      success: false,
+      message: "AI verification failed",
       error: error.message,
     });
   }

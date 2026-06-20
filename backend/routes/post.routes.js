@@ -4,6 +4,7 @@ import {
   createPost,
   getALlPosts,
   likePost,
+  verifyContentWithAi,
 } from "../controllers/post.controller.js";
 import upload from "../middlewares/multer.js";
 import isAuth from "../middlewares/isAuth.js";
@@ -30,4 +31,5 @@ postRoutes.post("/comment/:id", isAuth, commentOnPost);
 // ai comment suggestion route
 postRoutes.post("/suggest-posts", isAuth, generateAiSuggestion);
 postRoutes.get("/suggest-comment/:id", isAuth, generateAIComment);
+postRoutes.get("/verify-content/:id", isAuth, verifyContentWithAi);
 export default postRoutes;

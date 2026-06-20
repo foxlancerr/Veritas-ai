@@ -1,3 +1,4 @@
+import { io } from "../index.js";
 import Notification from "../models/notification.model.js";
 
 // Helper: create a notification and return it fully populated for socket emit
@@ -27,10 +28,19 @@ export const getNotifications = async (req, res) => {
 export const deleteNotification = async (req, res) => {
   try {
     const { id } = req.params;
-    await Notification.findOneAndDelete({
+    const notificationDeleted = await Notification.findOneAndDelete({
       _id: id,
       receiver: req.userId,
     });
+
+    if (!notificationDeleted) {
+      return res.status(404).json({ message: "Notification not found." });
+    }
+
+    io.to(req.userId).emit("notificationDeleted", {
+      notificationId: id,
+    });
+
     return res
       .status(200)
       .json({ message: "Notification deleted successfully." });
@@ -43,9 +53,18 @@ export const deleteNotification = async (req, res) => {
 // delete all notifications
 export const clearAllNotification = async (req, res) => {
   try {
-    await Notification.deleteMany({
+    const clearedNotifications = await Notification.deleteMany({
       receiver: req.userId,
     });
+
+    if (!clearedNotifications) {
+      return res
+        .status(404)
+        .json({ message: "No notifications found to delete." });
+    }
+
+ 
+    io.to(req.userId).emit("notificationCleared");
     return res
       .status(200)
       .json({ message: "All notifications deleted successfully." });
