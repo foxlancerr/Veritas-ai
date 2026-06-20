@@ -9,6 +9,8 @@ export const createPost = async (req, res) => {
   try {
     const { description } = req.body;
 
+    
+
     // check the post is safe or not using groq moderation
     const moderation = await fakeDetectionPost(description, 300);
 
