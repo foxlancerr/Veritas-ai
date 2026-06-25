@@ -19,6 +19,7 @@ const UserContextProvider = ({ children }) => {
   const [userData, setUserData] = useState(null);
   const [allPostsData, setAllPostsData] = useState([]);
   const [profileData, setProfileData] = useState([]);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
   // Fetch current user data
   const getCurrentUser = async () => {
@@ -58,7 +59,12 @@ const UserContextProvider = ({ children }) => {
       console.log(userName, "is called");
 
       //  const navigate = useNavigate()
-      navigate("/profile");
+      navigate("/profile?username=" + userName);
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     } catch (error) {
       console.log("Error fetching profile:", error);
       return null;
@@ -95,6 +101,38 @@ const UserContextProvider = ({ children }) => {
     };
   }, [userData?._id]);
 
+  // Presence state: track which users are currently online
+  useEffect(() => {
+    const handleOnlineUsers = (users) => {
+      if (!Array.isArray(users)) return;
+      setOnlineUsers(users.map((userId) => userId.toString()));
+    };
+
+    const handleUserOnline = ({ userId }) => {
+      if (!userId) return;
+      const idString = userId.toString();
+      setOnlineUsers((prev) =>
+        prev.includes(idString) ? prev : [...prev, idString],
+      );
+    };
+
+    const handleUserOffline = ({ userId }) => {
+      if (!userId) return;
+      const idString = userId.toString();
+      setOnlineUsers((prev) => prev.filter((id) => id !== idString));
+    };
+
+    socket.on("onlineUsers", handleOnlineUsers);
+    socket.on("userOnline", handleUserOnline);
+    socket.on("userOffline", handleUserOffline);
+
+    return () => {
+      socket.off("onlineUsers", handleOnlineUsers);
+      socket.off("userOnline", handleUserOnline);
+      socket.off("userOffline", handleUserOffline);
+    };
+  }, []);
+
   // Real-time feed: prepend new posts as they are created by any user
   useEffect(() => {
     const handleNewPost = (post) => {
@@ -122,6 +160,7 @@ const UserContextProvider = ({ children }) => {
     profileData,
     setProfileData,
     handleGetProfile,
+    onlineUsers,
   };
 
   return (

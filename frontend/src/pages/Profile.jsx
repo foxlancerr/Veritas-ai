@@ -10,6 +10,7 @@ import EditProfile from "../components/EditProfile";
 import Posts from "../components/Posts";
 import ConnectionButton from "../components/ConnectionButton";
 import { FaPlus, FaGraduationCap, FaBriefcase, FaTools } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
   const {
@@ -20,14 +21,16 @@ const Profile = () => {
     setAllPostsData,
     profileData,
     setProfileData,
+    handleGetprofile,
   } = useContext(UserDataContext);
-  console.log("from profile page userdata", userData);
-  console.log("from profile page profiledata", profileData);
-  const [profilePost, setProfilePost] = useState([]);
 
+  const navigate = useNavigate();
+
+
+  const [profilePost, setProfilePost] = useState([]);
   useEffect(() => {
     setProfilePost(
-      allPostsData.filter((post) => post.author._id == profileData._id)
+      allPostsData.filter((post) => post.author._id == profileData._id),
     );
   }, [profileData]);
   return (
@@ -45,7 +48,7 @@ const Profile = () => {
               alt="Cover"
               className="w-full h-full object-cover"
             />
-            {profileData._id === userData._id && (
+            {profileData?._id === userData?._id && (
               <FiCamera
                 className="absolute right-4 top-4 w-6 h-6 text-white bg-black/40 dark:bg-black/50 rounded-full p-1 cursor-pointer hover:scale-105 transition"
                 onClick={() => setEditProfile(true)}
@@ -65,7 +68,7 @@ const Profile = () => {
               </div>
             </div>
 
-            {profileData._id === userData._id && (
+            {profileData?._id === userData?._id && (
               <div
                 className="w-[22px] h-[22px] bg-[#17c1ff] ml-[-20px] mt-[40px] flex justify-center items-center rounded-full text-white text-xs font-bold cursor-pointer border-2 border-white dark:border-gray-900 shadow"
                 onClick={() => setEditProfile(true)}
@@ -142,7 +145,7 @@ const Profile = () => {
                   {skill}
                 </span>
               ))}
-              {profileData._id === userData._id && (
+              {profileData?._id === userData?._id && (
                 <button
                   className="flex items-center gap-2 px-4 py-2 border border-[#2dc0ff] text-[#2dc0ff] rounded-full hover:bg-blue-50 dark:hover:bg-[#083047] transition text-sm"
                   onClick={() => setEditProfile(true)}
@@ -175,7 +178,7 @@ const Profile = () => {
                   </div>
                 </div>
               ))}
-              {profileData._id === userData._id && (
+              {profileData?._id === userData?._id && (
                 <button
                   className="mt-2 flex items-center gap-2 px-4 py-2 border border-[#2dc0ff] text-[#2dc0ff] rounded-full hover:bg-blue-50 dark:hover:bg-[#083047] transition text-sm"
                   onClick={() => setEditProfile(true)}
@@ -208,7 +211,7 @@ const Profile = () => {
                   </div>
                 </div>
               ))}
-              {profileData._id === userData._id && (
+              {profileData?._id === userData?._id && (
                 <button
                   className="mt-2 flex items-center gap-2 px-4 py-2 border border-[#2dc0ff] text-[#2dc0ff] rounded-full hover:bg-blue-50 dark:hover:bg-[#083047] transition text-sm"
                   onClick={() => setEditProfile(true)}
