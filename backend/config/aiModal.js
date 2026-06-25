@@ -18,13 +18,14 @@ export const generateAIContent = async (
   }
   messages.push({ role: "user", content: userMessage });
 
-  const msg = await client.chat.completions.create({
+  const options = {
     model: GROQ_MODEL_NAME,
     max_tokens: token,
     messages,
     ...(isJson && { response_format: { type: "json_object" } }),
-  });
+  };
 
+  const msg = await client.chat.completions.create(options);
   return msg.choices[0].message.content;
 };
 

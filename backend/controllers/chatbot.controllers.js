@@ -218,7 +218,7 @@ Present these results in a clear, readable format. If results are empty, suggest
     }
   }
 
-  return await generateAIContent(userPrompt, 220, SYSTEM_PROMPT);
+  return await generateAIContent(userPrompt, 220, false, SYSTEM_PROMPT);
 };
 
 export const httpChatHandler = async (req, res) => {

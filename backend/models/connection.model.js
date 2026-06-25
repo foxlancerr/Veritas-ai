@@ -17,5 +17,11 @@ const connectionSchema = mongoose.Schema(
   },
   { timestamps: true }
 );
+
+connectionSchema.index({
+  sender: 1,
+  createdAt: 1,
+});
+
 const Connection = mongoose.model("Connection", connectionSchema);
 export default Connection;

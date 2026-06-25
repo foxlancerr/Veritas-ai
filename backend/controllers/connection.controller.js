@@ -5,32 +5,65 @@ import Notification from "../models/notification.model.js";
 import { io } from "../index.js";
 import { userSocketMap } from "../config/socket.js";
 import { createAndPopulateNotification } from "./notification.controllers.js";
+import { MAX_LIMIT_PER_DAY } from "../constant/index.js";
 
 // send connection request
 export const sendConnection = async (req, res) => {
   try {
     const { id } = req.params;
-    let sender = req.userId;
-    let user = await User.findById(sender);
+    const sender = req.userId;
+
+    const user = await User.findById(sender);
+
+    // Prevent self connection
     if (sender == id) {
-      return res
-        .status(400)
-        .json({ message: "You cannot send a connection request to yourself." });
+      return res.status(400).json({
+        message: "You cannot send a connection request to yourself.",
+      });
     }
+
+    // Already connected
     if (user.connection.includes(id)) {
-      return res.status(400).json({ message: "You are already connected." });
+      return res.status(400).json({
+        message: "You are already connected.",
+      });
     }
-    let existingConnection = await Connection.findOne({
+
+    
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const todayConnections = await Connection.countDocuments({
+      sender,
+      status: { $in: ["pending", "accepted"] },
+      createdAt: { $gte: startOfDay },
+    });
+
+    if (todayConnections >= MAX_LIMIT_PER_DAY) {
+      return res.status(429).json({
+        message:
+          `You have reached your daily connection request limit of ${MAX_LIMIT_PER_DAY}.`,
+      });
+    }
+
+    // Existing pending request
+    const existingConnection = await Connection.findOne({
       sender,
       receiver: id,
       status: "pending",
     });
+
     if (existingConnection) {
-      return res
-        .status(400)
-        .json({ message: "Connection request already exist." });
+      return res.status(400).json({
+        message: "Connection request already exists.",
+      });
     }
-    const newRequest = await Connection.create({ sender, receiver: id });
+
+    // Create request
+    const newRequest = await Connection.create({
+      sender,
+      receiver: id,
+    });
 
     // Persist notification and populate before socket emit
     const notification = await createAndPopulateNotification({
@@ -40,29 +73,40 @@ export const sendConnection = async (req, res) => {
     });
 
     // Socket — real-time updates
-    let receiverSocketId = userSocketMap.get(id.toString());
-    let senderSocketId = userSocketMap.get(sender.toString());
+    const receiverSocketId = userSocketMap.get(id.toString());
+    const senderSocketId = userSocketMap.get(sender.toString());
 
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("statusUpdate", {
         updatedUserId: sender,
         newStatus: "received",
       });
-      // Push fully populated notification to receiver
-      io.to(receiverSocketId).emit("newNotification", notification);
+
+      io.to(receiverSocketId).emit(
+        "newNotification",
+        notification
+      );
     }
+
     if (senderSocketId) {
       io.to(senderSocketId).emit("statusUpdate", {
         updatedUserId: id,
         newStatus: "pending",
       });
     }
-    return res
-      .status(200)
-      .json({ message: "Connection request sent successfully.", newRequest });
+
+    return res.status(200).json({
+      message: "Connection request sent successfully.",
+      newRequest,
+      remainingLimit: MAX_LIMIT_PER_DAY - (todayConnections + 1),
+    });
   } catch (error) {
     console.error("Error sending connection request:", error);
-    return res.status(500).json({ message: "send connection error", error });
+
+    return res.status(500).json({
+      message: "Send connection error",
+      error: error.message,
+    });
   }
 };
 
