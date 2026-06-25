@@ -53,7 +53,7 @@ const AppRoutes = () => {
 const App = () => {
   return (
     <>
-      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+      <Toaster position="top-center" toastOptions={{ duration: 5000 }} />
 
       <AuthProvider>
         <Router>

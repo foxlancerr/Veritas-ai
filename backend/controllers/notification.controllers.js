@@ -1,4 +1,5 @@
 import { io } from "../index.js";
+import { getUserRoom } from "../config/socket.js";
 import Notification from "../models/notification.model.js";
 
 // Helper: create a notification and return it fully populated for socket emit
@@ -37,7 +38,7 @@ export const deleteNotification = async (req, res) => {
       return res.status(404).json({ message: "Notification not found." });
     }
 
-    io.to(req.userId).emit("notificationDeleted", {
+    io.to(getUserRoom(req.userId)).emit("notificationDeleted", {
       notificationId: id,
     });
 
@@ -64,7 +65,7 @@ export const clearAllNotification = async (req, res) => {
     }
 
  
-    io.to(req.userId).emit("notificationCleared");
+    io.to(getUserRoom(req.userId)).emit("notificationCleared");
     return res
       .status(200)
       .json({ message: "All notifications deleted successfully." });

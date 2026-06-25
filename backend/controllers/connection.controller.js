@@ -3,7 +3,7 @@ import User from "../models/user.model.js";
 import Notification from "../models/notification.model.js";
 
 import { io } from "../index.js";
-import { userSocketMap } from "../config/socket.js";
+import { getUserRoom } from "../config/socket.js";
 import { createAndPopulateNotification } from "./notification.controllers.js";
 import { MAX_LIMIT_PER_DAY } from "../constant/index.js";
 
@@ -73,27 +73,20 @@ export const sendConnection = async (req, res) => {
     });
 
     // Socket — real-time updates
-    const receiverSocketId = userSocketMap.get(id.toString());
-    const senderSocketId = userSocketMap.get(sender.toString());
+    const receiverRoom = getUserRoom(id.toString());
+    const senderRoom = getUserRoom(sender.toString());
 
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("statusUpdate", {
-        updatedUserId: sender,
-        newStatus: "received",
-      });
+    io.to(receiverRoom).emit("statusUpdate", {
+      updatedUserId: sender,
+      newStatus: "received",
+    });
 
-      io.to(receiverSocketId).emit(
-        "newNotification",
-        notification
-      );
-    }
+    io.to(receiverRoom).emit("newNotification", notification);
 
-    if (senderSocketId) {
-      io.to(senderSocketId).emit("statusUpdate", {
-        updatedUserId: id,
-        newStatus: "pending",
-      });
-    }
+    io.to(senderRoom).emit("statusUpdate", {
+      updatedUserId: id,
+      newStatus: "pending",
+    });
 
     return res.status(200).json({
       message: "Connection request sent successfully.",
@@ -158,29 +151,24 @@ export const acceptConnection = async (req, res) => {
     });
 
     // Socket — real-time updates
-    const receiverSocketId = userSocketMap.get(receiverId);
-    const senderSocketId = userSocketMap.get(senderId);
+    const receiverRoom = getUserRoom(receiverId);
+    const senderRoom = getUserRoom(senderId);
 
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("statusUpdate", {
-        updatedUserId: senderId,
-        newStatus: "disconnect",
+    io.to(receiverRoom).emit("statusUpdate", {
+      updatedUserId: senderId,
+      newStatus: "disconnect",
+    });
+    if (staleNotif) {
+      io.to(receiverRoom).emit("notificationDeleted", {
+        notificationId: staleNotif._id,
       });
-      // Tell the acceptor's UI to remove the now-stale notification
-      if (staleNotif) {
-        io.to(receiverSocketId).emit("notificationDeleted", {
-          notificationId: staleNotif._id,
-        });
-      }
     }
-    if (senderSocketId) {
-      io.to(senderSocketId).emit("statusUpdate", {
-        updatedUserId: req.userId,
-        newStatus: "disconnect",
-      });
-      // Push live notification to the original sender
-      io.to(senderSocketId).emit("newNotification", notification);
-    }
+
+    io.to(senderRoom).emit("statusUpdate", {
+      updatedUserId: req.userId,
+      newStatus: "disconnect",
+    });
+    io.to(senderRoom).emit("newNotification", notification);
 
     return res.status(200).json({ message: "Connection request accepted." });
   } catch (error) {
@@ -263,27 +251,22 @@ export const rejectConnection = async (req, res) => {
     });
 
     // Real-time update
-    const senderSocketId = userSocketMap.get(senderId);
-    const receiverSocketId = userSocketMap.get(receiverId);
+    const senderRoom = getUserRoom(senderId);
+    const receiverRoom = getUserRoom(receiverId);
 
-    if (senderSocketId) {
-      io.to(senderSocketId).emit("statusUpdate", {
-        updatedUserId: receiverId,
-        newStatus: "connect",
-      });
-    }
+    io.to(senderRoom).emit("statusUpdate", {
+      updatedUserId: receiverId,
+      newStatus: "connect",
+    });
 
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("statusUpdate", {
-        updatedUserId: senderId,
-        newStatus: "connect",
+    io.to(receiverRoom).emit("statusUpdate", {
+      updatedUserId: senderId,
+      newStatus: "connect",
+    });
+    if (staleNotif) {
+      io.to(receiverRoom).emit("notificationDeleted", {
+        notificationId: staleNotif._id,
       });
-      // Remove the stale notification from the rejecter's UI
-      if (staleNotif) {
-        io.to(receiverSocketId).emit("notificationDeleted", {
-          notificationId: staleNotif._id,
-        });
-      }
     }
 
     return res.status(200).json({ message: "Connection request rejected." });
@@ -339,20 +322,17 @@ export const removeConnection = async (req, res) => {
     await User.findByIdAndUpdate(otherUserId, { $pull: { connection: myId } });
 
     //  socket io handling
-    let receiverSocketId = userSocketMap.get(otherUserId);
-    let senderSocketId = userSocketMap.get(myId);
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("statusUpdate", {
-        updatedUserId: myId,
-        newStatus: "connect",
-      });
-    }
-    if (senderSocketId) {
-      io.to(senderSocketId).emit("statusUpdate", {
-        updatedUserId: otherUserId,
-        newStatus: "connect",
-      });
-    }
+    const receiverRoom = getUserRoom(otherUserId);
+    const senderRoom = getUserRoom(myId);
+
+    io.to(receiverRoom).emit("statusUpdate", {
+      updatedUserId: myId,
+      newStatus: "connect",
+    });
+    io.to(senderRoom).emit("statusUpdate", {
+      updatedUserId: otherUserId,
+      newStatus: "connect",
+    });
 
     return res
       .status(200)

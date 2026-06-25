@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useNotification } from "../context/notificationContext";
 
 const Network = () => {
-  const { userData, handleGetProfile } = useContext(UserDataContext);
+  const { userData, handleGetProfile, onlineUsers } = useContext(UserDataContext);
   const [invitations, setInvitations] = useState([]);
   const [myConnections, setMyConnections] = useState([]);
   const [loadingInvites, setLoadingInvites] = useState(true);
@@ -285,6 +285,26 @@ const Network = () => {
                           {conn.headline}
                         </p>
                       )}
+                      <div className="mt-2 flex justify-center">
+                        <span
+                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold transition ${
+                            onlineUsers.includes(conn._id.toString())
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
+                              : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                          }`}
+                        >
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              onlineUsers.includes(conn._id.toString())
+                                ? "bg-emerald-500"
+                                : "bg-gray-400"
+                            }`}
+                          />
+                          {onlineUsers.includes(conn._id.toString())
+                            ? "Online"
+                            : "Offline"}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Actions */}

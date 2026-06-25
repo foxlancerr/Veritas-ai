@@ -1,7 +1,7 @@
 import uploadOnCloudinary from "../config/cloudinary.js";
 import { io } from "../index.js";
 import Post from "../models/post.model.js";
-import { userSocketMap } from "../config/socket.js";
+import { getUserRoom } from "../config/socket.js";
 import { createAndPopulateNotification } from "./notification.controllers.js";
 import { fakeDetectionPost } from "../config/aiModal.js";
 // controller for creating a post
@@ -110,10 +110,7 @@ export const likePost = async (req, res) => {
           relatedUser: userId,
           relatedPost: postId,
         });
-        const authorSocketId = userSocketMap.get(post.author.toString());
-        if (authorSocketId) {
-          io.to(authorSocketId).emit("newNotification", notification);
-        }
+        io.to(getUserRoom(post.author.toString())).emit("newNotification", notification);
       }
     }
 
@@ -168,10 +165,7 @@ export const commentOnPost = async (req, res) => {
         relatedUser: userId,
         relatedPost: postId,
       });
-      const authorSocketId = userSocketMap.get(post.author._id.toString());
-      if (authorSocketId) {
-        io.to(authorSocketId).emit("newNotification", notification);
-      }
+      io.to(getUserRoom(post.author._id.toString())).emit("newNotification", notification);
     }
     io.emit("commentAdded", { postId, comm: post.comment });
     return res.status(200).json({

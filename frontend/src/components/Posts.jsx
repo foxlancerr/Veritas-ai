@@ -16,6 +16,9 @@ import { RiAiGenerate } from "react-icons/ri";
 import toast from "react-hot-toast";
 import ReactMarkdown from "react-markdown";
 import apiHelpers from "../../api/apiHelper";
+import PostActions from "./PostAction";
+
+
 
 const Posts = ({
   id,
@@ -26,7 +29,7 @@ const Posts = ({
   comment,
   createdAt,
 }) => {
-  const { userData, handleGetProfile } = useContext(UserDataContext);
+  const { userData, handleGetProfile, onlineUsers } = useContext(UserDataContext);
   const [readMore, setReadMore] = useState(false);
   const [likes, setLikes] = useState([]);
   const [commentContent, setCommentContent] = useState("");
@@ -145,7 +148,7 @@ const Posts = ({
           className="flex gap-4 cursor-pointer"
           onClick={() => handleGetProfile(author.userName, navigate)}
         >
-          <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-lg">
+          <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-lg">
             <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-black">
               <img
                 src={author.profileImage || emptyDp}
@@ -153,6 +156,9 @@ const Posts = ({
                 className="w-full h-full object-cover rounded-full"
               />
             </div>
+            {onlineUsers.includes(author._id.toString()) && (
+              <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white dark:border-black bg-emerald-500 shadow-lg" />
+            )}
           </div>
           <div>
             <h2 className="text-lg font-bold hover:underline hover:text-blue-600 dark:text-white transition">
@@ -167,26 +173,14 @@ const Posts = ({
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={handleVerifyPost}
-          disabled={verifyLoading}
-          title="Verify post content with AI"
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200
-    ${
-      verifyLoading
-        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-        : "bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 text-white hover:scale-105 hover:shadow-lg active:scale-95"
-    }
-  `}
-        >
-          {verifyLoading ? "Verifying..." : "Verify Post"}
-        </button>
+        <PostActions
+          handleVerifyPost={handleVerifyPost}
+          verifyLoading={verifyLoading}
+          userData={userData}
+          author={author}
+        />
 
-        {/* Connection Button */}
-        {userData._id !== author._id && (
-          <ConnectionButton userId={author._id} />
-        )}
+       
       </div>
 
       {/* Description */}
