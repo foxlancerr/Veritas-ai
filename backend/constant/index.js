@@ -351,3 +351,6 @@ export const spamWordsList = [
   "iban",
   "swift code",
 ];
+
+
+export const MAX_LIMIT_PER_DAY = 20; 
