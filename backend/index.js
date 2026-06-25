@@ -11,6 +11,7 @@ import postRoutes from "./routes/post.routes.js";
 import connectionRouter from "./routes/connection.routes.js";
 import http from "http";
 import notificationRouter from "./routes/notification.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
 import { allowCors } from "./middlewares/allowCors.js";
 import { setupSocket } from "./config/socket.js";
 
@@ -30,6 +31,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/connection", connectionRouter);
 app.use("/api/notification", notificationRouter);
 app.use("/api/post", postRoutes);
+app.use("/api/chat", chatRoutes);
 server.listen(PORT, () => {
   connectDB();
   console.log(`Server is running on port ${PORT}`);

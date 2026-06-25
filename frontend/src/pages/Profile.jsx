@@ -104,8 +104,14 @@ const Profile = () => {
                 Edit Profile
               </button>
             ) : (
-              <div className="mt-2">
+              <div className="mt-2 flex flex-wrap gap-2">
                 <ConnectionButton userId={profileData._id} />
+                <button
+                  onClick={() => navigate(`?chatWith=${profileData._id}`)}
+                  className="px-4 py-2 rounded-full bg-[#0f76ff] text-white hover:bg-[#0a5bd4] transition font-medium flex items-center gap-2"
+                >
+                  Message
+                </button>
               </div>
             )}
           </div>

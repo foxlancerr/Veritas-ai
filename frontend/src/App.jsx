@@ -19,6 +19,7 @@ import PrivateRoute from "./layout/PrivateRoute";
 import PublicRoute from "./layout/PublicRoute";
 import UserContextProvider from "./context/UserContext";
 import { NotificationContextProvider } from "./context/notificationContext";
+import ChatApp from "./components/ChatApp";
 
 const AppRoutes = () => {
   return (
@@ -36,6 +37,7 @@ const AppRoutes = () => {
             <UserContextProvider>
               <NotificationContextProvider>
                 <Outlet />
+                <ChatApp />
               </NotificationContextProvider>
             </UserContextProvider>
           }
@@ -54,7 +56,6 @@ const App = () => {
   return (
     <>
       <Toaster position="top-center" toastOptions={{ duration: 5000 }} />
-
       <AuthProvider>
         <Router>
           <AppRoutes />
