@@ -8,27 +8,34 @@ export default function ConversationList({ onSelect }) {
   const convos = useSelector(s => Array.isArray(s.conversations?.items) ? s.conversations.items : []);
   const { userData, onlineUsers } = useContext(UserDataContext);
 
-  console.log('ConversationList render, convos:', convos);
   useEffect(() => { dispatch(fetchConversations()); }, [dispatch]);
 
   return (
-    <div className="w-80 border-r overflow-auto">
+    <div className="w-full overflow-auto p-1 sm:p-2">
       {convos.map((c) => {
         const other = (c.participants || []).find(p => p._id !== userData?._id) || {};
         const isOnline = onlineUsers?.includes?.(other._id?.toString());
+        const displayedTime = c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+
         return (
-          <div key={c._id} className="p-3 hover:bg-gray-100 cursor-pointer flex items-center gap-3" onClick={() => onSelect(c)}>
-            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
-              <img src={other.profileImage || '/logo.svg'} alt="avatar" className="w-full h-full object-cover" />
+          <div
+            key={c._id}
+            className="my-2 flex cursor-pointer items-center gap-3 rounded-2xl border border-transparent p-3 transition hover:border-slate-200 hover:bg-slate-100 dark:hover:border-slate-700 dark:hover:bg-slate-800"
+            onClick={() => onSelect(c)}
+          >
+            <div className="h-11 w-11 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+              <img src={other.profileImage || '/logo.svg'} alt="avatar" className="h-full w-full object-cover" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <div className="font-semibold text-sm">{other.firstName ? `${other.firstName} ${other.lastName}` : other.userName || 'Unknown'}</div>
-                <div className="text-xs text-gray-400">{new Date(c.lastMessageAt).toLocaleTimeString()}</div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <div className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {other.firstName ? `${other.firstName} ${other.lastName}` : other.userName || 'Unknown'}
+                </div>
+                <div className="text-[11px] text-slate-400">{displayedTime}</div>
               </div>
-              <div className="text-xs text-gray-500 flex items-center gap-2">
+              <div className="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                 <span className="truncate">{c.lastMessage || 'No messages yet'}</span>
-                {isOnline ? <span className="text-green-500">●</span> : <span className="text-gray-300">●</span>}
+                {isOnline ? <span className="text-emerald-500">●</span> : <span className="text-slate-300 dark:text-slate-600">●</span>}
               </div>
             </div>
           </div>

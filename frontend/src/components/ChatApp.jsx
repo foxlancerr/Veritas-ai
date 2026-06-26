@@ -30,7 +30,23 @@ function Inner() {
         const response = await apiHelpers.post("/chat/conversation", {
           participantId: chatWith,
         });
-        setActive(response);
+
+        let conversation = response;
+        try {
+          const conversations = await apiHelpers.get("/chat/conversations");
+          const matchedConversation = Array.isArray(conversations)
+            ? conversations.find(
+                (item) =>
+                  item._id === response._id ||
+                  (item.participants || []).some((participant) => participant._id === chatWith)
+              )
+            : null;
+          conversation = matchedConversation || response;
+        } catch (conversationListError) {
+          console.error("Failed to enrich conversation details", conversationListError);
+        }
+
+        setActive(conversation);
       } catch (error) {
         console.error("Failed to open conversation", error);
       } finally {
@@ -41,11 +57,10 @@ function Inner() {
     fetchConversation();
   }, [chatWith, token]);
 
-  // Prevent body scroll when modal is open
   useEffect(() => {
     const previous = document.body.style.overflow;
     if (open) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     }
     return () => {
       document.body.style.overflow = previous;
@@ -61,30 +76,28 @@ function Inner() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center">
-      <div className="w-full flex-col max-w-5xl h-[80vh] rounded-2xl bg-white shadow-2xl border border-gray-200 overflow-hidden flex">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-2 sm:p-4">
+      <div className="flex h-[95dvh] w-full max-w-6xl flex-col overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:h-[88vh]">
+        <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-3 text-white dark:border-slate-700 sm:px-5">
           <div>
-            <div className="font-semibold">Messenger</div>
-            <div className="text-xs text-gray-500">
-              Real-time one-to-one chat
-            </div>
+            <div className="text-lg font-semibold">Messenger</div>
+            <div className="text-xs text-blue-50/90">Real-time one-to-one chat</div>
           </div>
           <button
             onClick={closeChat}
-            className="text-gray-500 hover:text-gray-900"
+            className="rounded-full border border-white/30 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-white/10"
           >
             Close
           </button>
         </div>
-        <div className="flex-1 flex overflow-hidden">
-          <div className="w-80 border-r border-gray-200 overflow-y-scroll">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
+          <div className="w-full border-b border-slate-200 bg-slate-50/80 dark:border-slate-700 dark:bg-slate-950/60 md:w-80 md:border-b-0 md:border-r">
             <ConversationList onSelect={(c) => setActive(c)} />
           </div>
-          <div className="flex-1 overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-hidden bg-white dark:bg-slate-900">
             {loading ? (
-              <div className="flex h-full items-center justify-center">
-                Loading...
+              <div className="flex h-full items-center justify-center text-sm text-slate-500 dark:text-slate-400">
+                Loading conversation...
               </div>
             ) : (
               <ChatWindow conversation={active} />
