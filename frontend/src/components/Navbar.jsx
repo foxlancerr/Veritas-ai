@@ -3,6 +3,7 @@ import emptyDp from "../assets/emptyDp.jpg";
 import { IoNotificationsSharp, IoSearchSharp } from "react-icons/io5";
 import { FaUserGroup } from "react-icons/fa6";
 import { TiHome } from "react-icons/ti";
+import { FiMessageCircle } from "react-icons/fi";
 import { useContext, useEffect, useRef, useState } from "react";
 
 import { socket, UserDataContext } from "../context/UserContext";
@@ -148,6 +149,18 @@ const Navbar = () => {
           >
             <FaUserGroup className="text-xl" />
             <span className="text-xs">My Network</span>
+          </div>
+
+          <div
+            className={`flex flex-col items-center justify-center rounded-full px-3 py-2 text-sm transition duration-200 ${
+              currentPath === "/messages"
+                ? "text-sky-600 font-semibold"
+                : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+            }`}
+            onClick={() => navigate("/messages")}
+          >
+            <FiMessageCircle className="text-2xl" />
+            <span className="text-xs hidden md:block">Messages</span>
           </div>
 
           <div

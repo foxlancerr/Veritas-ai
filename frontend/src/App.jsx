@@ -12,6 +12,7 @@ import HomePage from "./pages/HomePage";
 import Network from "./pages/Network";
 import Profile from "./pages/Profile";
 import Notification from "./pages/Notification";
+import Messages from "./pages/Messages";
 
 import { Toaster } from "react-hot-toast";
 
@@ -46,6 +47,8 @@ const AppRoutes = () => {
           <Route path="/network" element={<Network />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/notifications" element={<Notification />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/messages" element={<Messages />} />
         </Route>
       </Route>
     </Routes>
