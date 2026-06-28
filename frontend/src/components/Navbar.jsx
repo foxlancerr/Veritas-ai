@@ -6,7 +6,7 @@ import { TiHome } from "react-icons/ti";
 import { FiMessageCircle } from "react-icons/fi";
 import { useContext, useEffect, useRef, useState } from "react";
 
-import { socket, UserDataContext } from "../context/UserContext";
+import { UserDataContext } from "../context/UserContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import ToggleTheme from "./ToggleTheme";
@@ -22,12 +22,11 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState("");
   const [searchData, setSearchData] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const { logout: handleLogout } = useAuthContext();
   const { notificationCount, fetchNotifications } = useNotification();
   const currentPath = location.pathname;
-  // Close dropdown if clicked outside
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -44,13 +43,11 @@ const Navbar = () => {
         withCredentials: true,
       });
       setSearchData(result.users);
-      console.log(result.users);
     } catch (error) {
       console.error("Error searching user:", error);
     }
   };
 
-  // calling the search
   useEffect(() => {
     if (searchInput.length > 0) {
       handleSearch();
@@ -65,186 +62,187 @@ const Navbar = () => {
 
   return (
     <>
-    <nav className="w-full fixed top-0 left-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-sm shadow-sm transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/95">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 px-3 py-3 md:px-6">
-        <div
-          className="flex min-w-0 flex-1 items-center gap-3 cursor-pointer"
-          onClick={() => navigate("/")}
-        >
-          <img
-            src={logo2}
-            alt="logo"
-            className="w-10 h-10 shrink-0 rounded-2xl object-contain"
-          />
-
-          <div className="relative flex-1 min-w-0">
-            <form className="flex w-full items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-2 text-sm shadow-sm transition duration-300 focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-200 dark:border-slate-800 dark:bg-slate-900 dark:focus-within:border-sky-500 dark:focus-within:ring-sky-900/30">
-              <IoSearchSharp className="text-slate-500 dark:text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search"
-                className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 dark:text-white placeholder:text-slate-500 focus:outline-none"
-                onChange={(e) => setSearchInput(e.target.value)}
-                value={searchInput}
-              />
-            </form>
-
-            {searchData.length > 0 && (
-              <div className="absolute top-full left-0 z-50 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-950 mt-2 max-h-96 overflow-y-auto">
-                {searchData.map((user) => (
-                  <div
-                    key={user._id}
-                    className="flex items-center gap-3 px-4 py-3 transition duration-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer border-b border-slate-200 last:border-b-0 dark:border-slate-700"
-                    onClick={() => {
-                      handleGetProfile(user.userName, navigate);
-                      setSearchInput("");
-                      setSearchData([]);
-                    }}
-                  >
-                    <img
-                      src={user.profileImage || emptyDp}
-                      alt="dp"
-                      className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700"
-                    />
-                    <div className="min-w-0">
-                      <span className="block truncate font-medium text-sm text-slate-900 dark:text-white">
-                        {user.firstName} {user.lastName}
-                      </span>
-                      <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
-                        @{user.userName}
-                      </span>
-                      {user.headline && (
-                        <span className="block truncate text-xs text-slate-600 dark:text-slate-400">
-                          {user.headline}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      <nav className="fixed left-0 top-0 z-50 w-full border-b border-slate-200/70 bg-white/85 shadow-[0_12px_45px_-24px_rgba(15,23,42,0.38)] backdrop-blur-xl transition-colors duration-300 dark:border-slate-800/80 dark:bg-slate-950/85">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-3 py-3 md:px-6">
           <div
-            className={`hidden sm:flex flex-col items-center justify-center rounded-full px-3 py-2 text-sm transition duration-200 ${
-              currentPath === "/"
-                ? "text-sky-600 font-semibold"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-            }`}
+            className="flex min-w-0 flex-1 cursor-pointer items-center gap-3"
             onClick={() => navigate("/")}
           >
-            <TiHome className="text-2xl" />
-            <span className="text-xs hidden md:block">Home</span>
-          </div>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 via-blue-500 to-violet-600 p-1 shadow-lg shadow-sky-500/20">
+              <img
+                src={logo2}
+                alt="logo"
+                className="h-full w-full rounded-[14px] object-contain"
+              />
+            </div>
 
-          <div
-            className={`hidden lg:flex flex-col items-center justify-center rounded-full px-3 py-2 text-sm transition duration-200 ${
-              currentPath === "/network"
-                ? "text-sky-600 font-semibold"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-            }`}
-            onClick={() => navigate("/network")}
-          >
-            <FaUserGroup className="text-xl" />
-            <span className="text-xs">My Network</span>
-          </div>
+            <div className="relative min-w-0 flex-1">
+              <form className="control-ring flex w-full items-center gap-2 rounded-full border border-slate-200/80 bg-slate-50/80 px-3 py-2.5 text-sm shadow-sm transition-all duration-300 focus-within:border-sky-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-sky-200 dark:border-slate-800 dark:bg-slate-900/80 dark:focus-within:border-sky-500 dark:focus-within:bg-slate-900 dark:focus-within:ring-sky-900/30">
+                <IoSearchSharp className="text-slate-500 dark:text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none dark:text-white"
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  value={searchInput}
+                />
+              </form>
 
-          <div
-            className={`flex flex-col items-center justify-center rounded-full px-3 py-2 text-sm transition duration-200 ${
-              currentPath === "/messages"
-                ? "text-sky-600 font-semibold"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-            }`}
-            onClick={() => navigate("/messages")}
-          >
-            <FiMessageCircle className="text-2xl" />
-            <span className="text-xs hidden md:block">Messages</span>
-          </div>
-
-          <div
-            className={`flex flex-col items-center justify-center rounded-full px-3 py-2 text-sm transition duration-200 ${
-              currentPath === "/notifications"
-                ? "text-sky-600 font-semibold"
-                : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
-            }`}
-            onClick={() => navigate("/notifications")}
-          >
-            <div className="relative">
-              <IoNotificationsSharp className="text-2xl" />
-              {notificationCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-[3px]">
-                  {notificationCount > 99 ? "99+" : notificationCount}
-                </span>
+              {searchData.length > 0 && (
+                <div className="absolute left-0 top-full z-50 mt-2 max-h-96 w-full overflow-hidden overflow-y-auto rounded-2xl border border-slate-200/80 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-950">
+                  {searchData.map((user) => (
+                    <div
+                      key={user._id}
+                      className="flex cursor-pointer items-center gap-3 border-b border-slate-200/80 px-4 py-3 transition duration-200 last:border-b-0 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+                      onClick={() => {
+                        handleGetProfile(user.userName, navigate);
+                        setSearchInput("");
+                        setSearchData([]);
+                      }}
+                    >
+                      <img
+                        src={user.profileImage || emptyDp}
+                        alt="dp"
+                        className="h-10 w-10 rounded-full border border-slate-200 object-cover dark:border-slate-700"
+                      />
+                      <div className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-slate-900 dark:text-white">
+                          {user.firstName} {user.lastName}
+                        </span>
+                        <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                          @{user.userName}
+                        </span>
+                        {user.headline && (
+                          <span className="block truncate text-xs text-slate-600 dark:text-slate-400">
+                            {user.headline}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-            <span className="text-xs hidden md:block">Notifications</span>
           </div>
 
-          <div className="relative" ref={dropdownRef}>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-md cursor-pointer transition duration-200 hover:scale-[1.02]"
-              onClick={() => setShowDropdown(!showDropdown)}
+              className={`hidden sm:flex flex-col items-center justify-center rounded-full px-3 py-2 text-sm transition duration-200 ${
+                currentPath === "/"
+                  ? "bg-sky-50 font-semibold text-sky-600 shadow-sm dark:bg-sky-500/10 dark:text-sky-300"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+              }`}
+              onClick={() => navigate("/")}
             >
-              <div className="h-full w-full overflow-hidden rounded-full bg-white">
-                <img
-                  src={userData?.profileImage || emptyDp}
-                  alt="Profile"
-                  className="h-full w-full object-cover rounded-full"
-                />
-              </div>
+              <TiHome className="text-2xl" />
+              <span className="hidden text-xs md:block">Home</span>
             </div>
 
-            {showDropdown && (
-              <div className="absolute right-0 mt-3 w-72 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-950 z-50 px-5 py-4">
-                <div className="flex flex-col items-center">
-                  <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px]">
-                    <div className="h-full w-full overflow-hidden rounded-full bg-white">
-                      <img
-                        src={userData?.profileImage || emptyDp}
-                        alt="Profile"
-                        className="h-full w-full object-cover rounded-full"
-                      />
-                    </div>
-                  </div>
-                  <h1 className="mb-3 text-center text-base font-semibold text-slate-900 dark:text-white">
-                    {`${userData?.firstName} ${userData?.lastName}`}
-                  </h1>
-                  <button
-                    onClick={() => handleGetProfile(userData?.userName, navigate)}
-                    className="w-full rounded-full border border-sky-500 px-4 py-2 text-sm font-medium text-sky-600 transition duration-200 hover:bg-sky-50 dark:border-sky-500 dark:text-sky-300 dark:hover:bg-slate-900"
-                  >
-                    View Profile
-                  </button>
-                </div>
+            <div
+              className={`hidden lg:flex flex-col items-center justify-center rounded-full px-3 py-2 text-sm transition duration-200 ${
+                currentPath === "/network"
+                  ? "bg-sky-50 font-semibold text-sky-600 shadow-sm dark:bg-sky-500/10 dark:text-sky-300"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+              }`}
+              onClick={() => navigate("/network")}
+            >
+              <FaUserGroup className="text-xl" />
+              <span className="text-xs">My Network</span>
+            </div>
 
-                <hr className="my-5 border-slate-200 dark:border-slate-700" />
+            <div
+              className={`flex flex-col items-center justify-center rounded-full px-3 py-2 text-sm transition duration-200 ${
+                currentPath === "/messages"
+                  ? "bg-sky-50 font-semibold text-sky-600 shadow-sm dark:bg-sky-500/10 dark:text-sky-300"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+              }`}
+              onClick={() => navigate("/messages")}
+            >
+              <FiMessageCircle className="text-2xl" />
+              <span className="hidden text-xs md:block">Messages</span>
+            </div>
 
-                <button
-                  onClick={() => navigate("/network")}
-                  className="w-full flex items-center gap-3 rounded-xl px-4 py-2 text-sm text-slate-700 transition duration-200 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                >
-                  <FaUserGroup className="text-lg" />
-                  <span>My Network</span>
-                </button>
-
-                <Link
-                  to={'/login'}
-                  onClick={handleLogout}
-                  className="mt-4 block w-full rounded-full border border-rose-500 px-4 py-2 text-center text-sm font-medium text-rose-600 transition duration-200 hover:bg-rose-50 dark:hover:bg-slate-900"
-                >
-                  Sign Out
-                </Link>
+            <div
+              className={`flex flex-col items-center justify-center rounded-full px-3 py-2 text-sm transition duration-200 ${
+                currentPath === "/notifications"
+                  ? "bg-sky-50 font-semibold text-sky-600 shadow-sm dark:bg-sky-500/10 dark:text-sky-300"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+              }`}
+              onClick={() => navigate("/notifications")}
+            >
+              <div className="relative">
+                <IoNotificationsSharp className="text-2xl" />
+                {notificationCount > 0 && (
+                  <span className="absolute -right-1.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-[3px] text-[10px] font-bold text-white">
+                    {notificationCount > 99 ? "99+" : notificationCount}
+                  </span>
+                )}
               </div>
-            )}
+              <span className="hidden text-xs md:block">Notifications</span>
+            </div>
+
+            <div className="relative" ref={dropdownRef}>
+              <div
+                className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-lg shadow-sky-500/20 transition duration-200 hover:scale-[1.02]"
+                onClick={() => setShowDropdown(!showDropdown)}
+              >
+                <div className="h-full w-full overflow-hidden rounded-full bg-white">
+                  <img
+                    src={userData?.profileImage || emptyDp}
+                    alt="Profile"
+                    className="h-full w-full rounded-full object-cover"
+                  />
+                </div>
+              </div>
+
+              {showDropdown && (
+                <div className="absolute right-0 z-50 mt-3 w-72 overflow-hidden rounded-[24px] border border-slate-200/80 bg-white px-5 py-4 shadow-2xl dark:border-slate-700 dark:bg-slate-950">
+                  <div className="flex flex-col items-center">
+                    <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px]">
+                      <div className="h-full w-full overflow-hidden rounded-full bg-white">
+                        <img
+                          src={userData?.profileImage || emptyDp}
+                          alt="Profile"
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      </div>
+                    </div>
+                    <h1 className="mb-3 text-center text-base font-semibold text-slate-900 dark:text-white">
+                      {`${userData?.firstName} ${userData?.lastName}`}
+                    </h1>
+                    <button
+                      onClick={() => handleGetProfile(userData?.userName, navigate)}
+                      className="control-ring w-full rounded-full border border-sky-500 px-4 py-2 text-sm font-medium text-sky-600 transition duration-200 hover:bg-sky-50 dark:border-sky-500 dark:text-sky-300 dark:hover:bg-slate-900"
+                    >
+                      View Profile
+                    </button>
+                  </div>
+
+                  <hr className="my-5 border-slate-200 dark:border-slate-700" />
+
+                  <button
+                    onClick={() => navigate("/network")}
+                    className="control-ring flex w-full items-center gap-3 rounded-xl px-4 py-2 text-sm text-slate-700 transition duration-200 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    <FaUserGroup className="text-lg" />
+                    <span>My Network</span>
+                  </button>
+
+                  <Link
+                    to={"/login"}
+                    onClick={handleLogout}
+                    className="control-ring mt-4 block w-full rounded-full border border-rose-500 px-4 py-2 text-center text-sm font-medium text-rose-600 transition duration-200 hover:bg-rose-50 dark:hover:bg-slate-900"
+                  >
+                    Sign Out
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <ToggleTheme />
           </div>
-
-          <ToggleTheme />
         </div>
-      </div>
-
-    </nav>
+      </nav>
       <Chatbot></Chatbot>
     </>
   );

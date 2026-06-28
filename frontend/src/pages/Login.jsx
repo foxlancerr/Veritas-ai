@@ -40,11 +40,16 @@ const Login = () => {
     <>
       <ThemeChangeNavbar />
 
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-black pt-[80px] px-4">
-        <div className="bg-white dark:bg-[#1f1f1f] shadow-xl rounded-lg w-full max-w-md p-6 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-3xl font-semibold text-center text-[#0A66C2] dark:text-[#2dc0ff] mb-6">
-            Join LinkedHub
-          </h2>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.16),_transparent_38%),linear-gradient(135deg,_#f7f9ff_0%,_#eef4ff_45%,_#f9f7ff_100%)] px-4 pb-10 pt-[96px] dark:bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.16),_transparent_38%),linear-gradient(135deg,_#020617_0%,_#0f172a_45%,_#030712_100%)]">
+        <div className="auth-shell w-full max-w-md p-7 sm:p-8">
+          <div className="mb-6 text-center">
+            <h2 className="text-3xl font-semibold tracking-tight text-sky-700 dark:text-sky-300">
+              Welcome back
+            </h2>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+              Sign in to continue your professional journey.
+            </p>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
@@ -54,7 +59,7 @@ const Login = () => {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border rounded-md bg-white dark:bg-black dark:text-white dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0A66C2] dark:focus:ring-[#2dc0ff]"
+              className="control-ring w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-900/20"
             />
 
             <div className="relative">
@@ -65,11 +70,11 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border rounded-md bg-white dark:bg-black dark:text-white dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0A66C2] dark:focus:ring-[#2dc0ff]"
+                className="control-ring w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-16 text-sm text-slate-800 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-900/20"
               />
               <span
                 onClick={() => setShow((prev) => !prev)}
-                className="absolute right-3 top-2.5 text-sm text-gray-500 dark:text-gray-300 cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-sm font-medium text-slate-500 transition hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
               >
                 {show ? "Hide" : "Show"}
               </span>
@@ -78,21 +83,21 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-2 rounded-md text-white font-semibold transition duration-300 ease-in-out ${
+              className={`w-full rounded-full py-3 text-sm font-semibold text-white shadow-lg transition duration-300 ease-in-out ${
                 loading
-                  ? "bg-blue-300 cursor-not-allowed"
-                  : "bg-[#0A66C2] hover:bg-[#004182]"
+                  ? "cursor-not-allowed bg-sky-300"
+                  : "bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500"
               }`}
             >
               {loading ? "Signing In..." : "Sign In"}
             </button>
           </form>
 
-          <p className="text-center text-sm mt-4 text-gray-600 dark:text-gray-300">
+          <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-300">
             Want to create an account?{" "}
             <span
               onClick={() => navigate("/signup")}
-              className="text-[#0A66C2] hover:underline cursor-pointer font-medium dark:text-[#2dc0ff]"
+              className="cursor-pointer font-semibold text-sky-700 hover:underline dark:text-sky-300"
             >
               Sign Up
             </span>
