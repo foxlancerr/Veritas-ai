@@ -63,180 +63,177 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav className="w-full h-[70px] bg-white dark:bg-[#1e1e1e] fixed top-0 shadow-md dark:shadow-sm z-50 flex items-center justify-between md:justify-around px-4 md:px-8 transition-colors duration-300">
-      {/* Left: Logo + Search */}
-      <div
-        className="flex items-center gap-4 cursor-pointer"
-        onClick={() => navigate("/")}
-      >
-        <img
-          src={logo2}
-          alt="logo"
-          className="w-[40px] h-[40px] object-contain"
-        />
-
-        <div className="relative ">
-          <form className="flex items-center bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
-            <IoSearchSharp className="text-gray-500 dark:text-gray-300 mr-2" />
-            <input
-              type="text"
-              placeholder="Search"
-              className="bg-transparent outline-none w-40 lg:w-64 text-sm text-gray-800 dark:text-white placeholder:text-gray-400"
-              onChange={(e) => setSearchInput(e.target.value)}
-              value={searchInput}
-            />
-          </form>
-
-          {searchData.length > 0 && (
-            <div className="absolute top-full left-0 w-full bg-white dark:bg-[#2c2c2c] border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg mt-2 z-50 max-h-96 overflow-y-auto">
-              {searchData.map((user) => (
-                <div
-                  key={user._id}
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 cursor-pointer border-b border-gray-300 dark:border-gray-600"
-                  onClick={() => {
-                    handleGetProfile(user.userName, navigate);
-                    setSearchInput("");
-                    setSearchData([]);
-                  }}
-                >
-                  <img
-                    src={user.profileImage || emptyDp}
-                    alt="dp"
-                    className="w-10 h-10 rounded-full object-cover border border-gray-300"
-                  />
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm text-gray-800 dark:text-white">
-                      {user.firstName} {user.lastName}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      @{user.userName}
-                    </span>
-                    {user.headline && (
-                      <span className="text-xs text-gray-700 dark:text-gray-300">
-                        {user.headline}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Right Icons & Profile */}
-      <div className="flex items-center gap-4 sm:gap-6 relative">
-        {/* Home */}
+    <>
+    <nav className="w-full fixed top-0 left-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-sm shadow-sm transition-colors duration-300 dark:border-slate-800 dark:bg-slate-950/95">
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 px-3 py-3 md:px-6">
         <div
-          className={`hidden sm:flex flex-col items-center cursor-pointer text-sm ${
-            currentPath === "/"
-              ? "text-[#18c5ff] font-bold"
-              : "text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-white"
-          }`}
+          className="flex min-w-0 flex-1 items-center gap-3 cursor-pointer"
           onClick={() => navigate("/")}
         >
-          <TiHome className="text-2xl" />
-          <span className="text-xs hidden md:block">Home</span>
-        </div>
+          <img
+            src={logo2}
+            alt="logo"
+            className="w-10 h-10 shrink-0 rounded-2xl object-contain"
+          />
 
-        {/* Network */}
-        <div
-          className={`hidden lg:flex flex-col items-center cursor-pointer text-sm ${
-            currentPath === "/network"
-              ? "text-[#18c5ff] font-bold"
-              : "text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-white"
-          }`}
-          onClick={() => navigate("/network")}
-        >
-          <FaUserGroup className="text-xl" />
-          <span className="text-xs">My Network</span>
-        </div>
+          <div className="relative flex-1 min-w-0">
+            <form className="flex w-full items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-2 text-sm shadow-sm transition duration-300 focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-200 dark:border-slate-800 dark:bg-slate-900 dark:focus-within:border-sky-500 dark:focus-within:ring-sky-900/30">
+              <IoSearchSharp className="text-slate-500 dark:text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search"
+                className="min-w-0 flex-1 bg-transparent text-sm text-slate-900 dark:text-white placeholder:text-slate-500 focus:outline-none"
+                onChange={(e) => setSearchInput(e.target.value)}
+                value={searchInput}
+              />
+            </form>
 
-        {/* Notifications */}
-        <div
-          className={`flex flex-col items-center cursor-pointer text-sm ${
-            currentPath === "/notifications"
-              ? "text-[#18c5ff] font-bold"
-              : "text-gray-600 hover:text-black dark:text-gray-300 dark:hover:text-white"
-          }`}
-          onClick={() => navigate("/notifications")}
-        >
-          <div className="relative">
-            <IoNotificationsSharp className="text-2xl" />
-            {notificationCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-[3px]">
-                {notificationCount > 99 ? "99+" : notificationCount}
-              </span>
+            {searchData.length > 0 && (
+              <div className="absolute top-full left-0 z-50 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-950 mt-2 max-h-96 overflow-y-auto">
+                {searchData.map((user) => (
+                  <div
+                    key={user._id}
+                    className="flex items-center gap-3 px-4 py-3 transition duration-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer border-b border-slate-200 last:border-b-0 dark:border-slate-700"
+                    onClick={() => {
+                      handleGetProfile(user.userName, navigate);
+                      setSearchInput("");
+                      setSearchData([]);
+                    }}
+                  >
+                    <img
+                      src={user.profileImage || emptyDp}
+                      alt="dp"
+                      className="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700"
+                    />
+                    <div className="min-w-0">
+                      <span className="block truncate font-medium text-sm text-slate-900 dark:text-white">
+                        {user.firstName} {user.lastName}
+                      </span>
+                      <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                        @{user.userName}
+                      </span>
+                      {user.headline && (
+                        <span className="block truncate text-xs text-slate-600 dark:text-slate-400">
+                          {user.headline}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
-          <span className="text-xs hidden md:block">Notifications</span>
         </div>
 
-        {/* Profile Dropdown */}
-        <div className="relative" ref={dropdownRef}>
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <div
-            className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-md cursor-pointer"
-            onClick={() => setShowDropdown(!showDropdown)}
+            className={`hidden sm:flex flex-col items-center justify-center rounded-full px-3 py-2 text-sm transition duration-200 ${
+              currentPath === "/"
+                ? "text-sky-600 font-semibold"
+                : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+            }`}
+            onClick={() => navigate("/")}
           >
-            <div className="w-full h-full rounded-full overflow-hidden bg-white">
-              <img
-                src={userData?.profileImage || emptyDp}
-                alt="Profile"
-                className="w-full h-full object-cover rounded-full"
-              />
-            </div>
+            <TiHome className="text-2xl" />
+            <span className="text-xs hidden md:block">Home</span>
           </div>
 
-          {showDropdown && (
-            <div className="absolute right-0 mt-3 w-72 bg-white dark:bg-[#2c2c2c] rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 px-5 py-4">
-              <div className="flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] mb-3">
-                  <div className="w-full h-full rounded-full overflow-hidden bg-white">
-                    <img
-                      src={userData?.profileImage || emptyDp}
-                      alt="Profile"
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  </div>
-                </div>
-                <h1 className="font-semibold text-base text-center mb-3 text-gray-800 dark:text-white">
-                  {`${userData?.firstName} ${userData?.lastName}`}
-                </h1>
-                <button
-                  onClick={() => handleGetProfile(userData?.userName, navigate)}
-                  className="w-full text-[#2dc0ff] border border-[#2dc0ff] px-4 py-2 rounded-full font-medium hover:bg-blue-50 dark:hover:bg-[#1c3a4b] transition text-sm"
-                >
-                  View Profile
-                </button>
-              </div>
+          <div
+            className={`hidden lg:flex flex-col items-center justify-center rounded-full px-3 py-2 text-sm transition duration-200 ${
+              currentPath === "/network"
+                ? "text-sky-600 font-semibold"
+                : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+            }`}
+            onClick={() => navigate("/network")}
+          >
+            <FaUserGroup className="text-xl" />
+            <span className="text-xs">My Network</span>
+          </div>
 
-              <hr className="my-5 border-gray-200 dark:border-gray-600" />
-
-              <button
-                onClick={() => navigate("/network")}
-                className="w-full flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 px-4 py-2 text-sm rounded-md transition"
-              >
-                <FaUserGroup className="text-lg" />
-                <span>My Network</span>
-              </button>
-
-              <Link
-                to={"/login"}
-                onClick={handleLogout}
-                className="w-full text-center block mt-4 text-[#ec4545] border border-[#ec4545] px-4 py-2 rounded-full font-medium hover:bg-red-50 dark:hover:bg-[#4a1f1f] transition text-sm"
-              >
-                Sign Out
-              </Link>
+          <div
+            className={`flex flex-col items-center justify-center rounded-full px-3 py-2 text-sm transition duration-200 ${
+              currentPath === "/notifications"
+                ? "text-sky-600 font-semibold"
+                : "text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
+            }`}
+            onClick={() => navigate("/notifications")}
+          >
+            <div className="relative">
+              <IoNotificationsSharp className="text-2xl" />
+              {notificationCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-[3px]">
+                  {notificationCount > 99 ? "99+" : notificationCount}
+                </span>
+              )}
             </div>
-          )}
-        </div>
+            <span className="text-xs hidden md:block">Notifications</span>
+          </div>
 
-        {/* Theme Toggle */}
-        <ToggleTheme />
+          <div className="relative" ref={dropdownRef}>
+            <div
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-md cursor-pointer transition duration-200 hover:scale-[1.02]"
+              onClick={() => setShowDropdown(!showDropdown)}
+            >
+              <div className="h-full w-full overflow-hidden rounded-full bg-white">
+                <img
+                  src={userData?.profileImage || emptyDp}
+                  alt="Profile"
+                  className="h-full w-full object-cover rounded-full"
+                />
+              </div>
+            </div>
+
+            {showDropdown && (
+              <div className="absolute right-0 mt-3 w-72 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-950 z-50 px-5 py-4">
+                <div className="flex flex-col items-center">
+                  <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px]">
+                    <div className="h-full w-full overflow-hidden rounded-full bg-white">
+                      <img
+                        src={userData?.profileImage || emptyDp}
+                        alt="Profile"
+                        className="h-full w-full object-cover rounded-full"
+                      />
+                    </div>
+                  </div>
+                  <h1 className="mb-3 text-center text-base font-semibold text-slate-900 dark:text-white">
+                    {`${userData?.firstName} ${userData?.lastName}`}
+                  </h1>
+                  <button
+                    onClick={() => handleGetProfile(userData?.userName, navigate)}
+                    className="w-full rounded-full border border-sky-500 px-4 py-2 text-sm font-medium text-sky-600 transition duration-200 hover:bg-sky-50 dark:border-sky-500 dark:text-sky-300 dark:hover:bg-slate-900"
+                  >
+                    View Profile
+                  </button>
+                </div>
+
+                <hr className="my-5 border-slate-200 dark:border-slate-700" />
+
+                <button
+                  onClick={() => navigate("/network")}
+                  className="w-full flex items-center gap-3 rounded-xl px-4 py-2 text-sm text-slate-700 transition duration-200 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <FaUserGroup className="text-lg" />
+                  <span>My Network</span>
+                </button>
+
+                <Link
+                  to={'/login'}
+                  onClick={handleLogout}
+                  className="mt-4 block w-full rounded-full border border-rose-500 px-4 py-2 text-center text-sm font-medium text-rose-600 transition duration-200 hover:bg-rose-50 dark:hover:bg-slate-900"
+                >
+                  Sign Out
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <ToggleTheme />
+        </div>
       </div>
 
-      <Chatbot></Chatbot>
     </nav>
+      <Chatbot></Chatbot>
+    </>
   );
 };
 
