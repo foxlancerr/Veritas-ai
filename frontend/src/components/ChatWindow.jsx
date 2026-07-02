@@ -8,7 +8,26 @@ const formatMessageTime = (value) => {
   if (!value) return '';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+};
+
+const formatLastSeen = (value) => {
+  if (!value) return 'Last seen recently';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Last seen recently';
+
+  const diffInMinutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+  if (diffInMinutes < 1) return 'Just now';
+  if (diffInMinutes < 60) return `Last seen ${diffInMinutes} min ago`;
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `Last seen ${diffInHours} hr ago`;
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `Last seen ${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
+
+  return `Last seen ${date.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
 };
 
 export default function ChatWindow({ conversation }) {
@@ -62,6 +81,7 @@ export default function ChatWindow({ conversation }) {
 
   const other = (conversation.participants || []).find(p => p._id !== userData?._id) || {};
   const isOnline = onlineUsers?.includes?.(other._id?.toString());
+  const otherLastSeen = other.lastSeen || other.lastSeenAt;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -75,7 +95,7 @@ export default function ChatWindow({ conversation }) {
             {other.firstName ? `${other.firstName} ${other.lastName}` : other.userName || 'Unknown'}
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400">
-            {isOnline ? 'Online' : 'Last seen recently'}
+            {isOnline ? 'Online' : formatLastSeen(otherLastSeen)}
           </div>
         </div>
       </div>

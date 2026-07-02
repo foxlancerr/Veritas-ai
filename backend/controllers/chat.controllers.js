@@ -18,6 +18,7 @@ export const createOrGetConversation = async (req, res) => {
       conversation = await Conversation.create({ participants: [currentUserId, participantId] });
     }
 
+    await conversation.populate("participants", "firstName lastName profileImage userName lastSeen");
     res.json(conversation);
   } catch (error) {
     console.error("createOrGetConversation", error);
@@ -30,7 +31,7 @@ export const getConversations = async (req, res) => {
   try {
     const userId = req.userId;
       const conversations = await Conversation.find({ participants: userId })
-        .populate("participants", "firstName lastName profileImage userName")
+        .populate("participants", "firstName lastName profileImage userName lastSeen")
         .populate("lastMessageSender", "firstName lastName profileImage")
         .sort({ lastMessageAt: -1 });
 

@@ -11,7 +11,7 @@ const formatTimestamp = (value) => {
   const diffInHours = (now - date) / (1000 * 60 * 60);
 
   if (diffInHours < 24) {
-    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
   }
   if (diffInHours < 48) {
     return 'Yesterday';
