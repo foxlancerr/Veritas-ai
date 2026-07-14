@@ -69,11 +69,11 @@ const Navbar = () => {
             onClick={() => navigate("/")}
           >
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 via-blue-500 to-violet-600 p-1 shadow-lg shadow-sky-500/20">
-              <img
+              {/* <img
                 src={logo2}
                 alt="logo"
                 className="h-full w-full rounded-[14px] object-contain"
-              />
+              /> */}S
             </div>
 
             <div className="relative min-w-0 flex-1">

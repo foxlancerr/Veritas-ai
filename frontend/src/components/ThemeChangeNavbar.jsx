@@ -12,7 +12,7 @@ const ThemeChangeNavbar = () => {
           </div>
           <div className="min-w-0">
             <h1 className="truncate text-base font-semibold tracking-tight text-slate-900 dark:text-white sm:text-lg">
-              LinkedIn Clone
+              SmartConnect AI System
             </h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               Developed by Muhammad Sahil
