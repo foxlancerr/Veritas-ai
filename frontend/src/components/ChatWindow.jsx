@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useContext } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchMessages, addMessage } from '../features/messages/messagesSlice';
+import { fetchMessages, addMessage, updateMessageStatus } from '../features/messages/messagesSlice';
 import MessageInput from './MessageInput';
 import { socket, UserDataContext } from '../context/UserContext';
 
@@ -30,17 +30,34 @@ const formatLastSeen = (value) => {
   return `Last seen ${date.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
 };
 
+const getMessageStatusLabel = (message) => {
+  if (!message) return '';
+  if (message.status === 'read') return '✓✓ Read';
+  if (message.status === 'delivered') return '✓✓ Delivered';
+  if (message.status === 'sent') return '✓ Sent';
+  if (message.seenBy?.length) return '✓✓ Read';
+  return '✓✓ Delivered';
+};
+
+const getStatusTextClassName = (message) => {
+  if (!message) return 'text-blue-200';
+  if (message.status === 'read') return 'text-blue-200';
+  if (message.status === 'delivered') return 'text-blue-200';
+  return 'text-blue-200';
+};
+
 export default function ChatWindow({ conversation }) {
   const dispatch = useDispatch();
   const messages = useSelector(s => (conversation ? s.messages.byConversation[conversation._id] || [] : []));
   const containerRef = useRef();
 
   const previousConversationRef = useRef(null);
+  const deliveredMessageIdsRef = useRef(new Set());
   const { userData, onlineUsers } = useContext(UserDataContext);
 
   useEffect(() => {
     if (!conversation) return;
-    if (!socket) return;
+    if (!socket || !userData?._id) return;
 
     const prevId = previousConversationRef.current;
     if (prevId && prevId !== conversation._id) {
@@ -48,28 +65,63 @@ export default function ChatWindow({ conversation }) {
     }
     previousConversationRef.current = conversation._id;
 
-    dispatch(fetchMessages({ conversationId: conversation._id }));
+    const refreshMessages = () => {
+      dispatch(fetchMessages({ conversationId: conversation._id }));
+    };
+
+    refreshMessages();
     socket.emit('joinConversation', { conversationId: conversation._id });
+    socket.emit('conversation-opened', { conversationId: conversation._id });
 
     const onNew = (payload) => {
       const { message } = payload;
       const messageConversationId = message?.conversationId?._id || message?.conversationId;
       if (messageConversationId?.toString() === conversation._id?.toString()) {
         dispatch(addMessage({ conversationId: conversation._id, message }));
+        if (message?.sender?._id?.toString() !== userData?._id?.toString()) {
+          const messageKey = message?._id?.toString();
+          if (messageKey && !deliveredMessageIdsRef.current.has(messageKey)) {
+            deliveredMessageIdsRef.current.add(messageKey);
+            socket.emit('message-delivered', { messageId: message._id });
+          }
+        }
       }
     };
 
+    const onStatusChanged = (payload) => {
+      const { messageId, message: updatedMessage } = payload || {};
+      const messageConversationId = updatedMessage?.conversationId?._id || updatedMessage?.conversationId;
+      if (!messageId || messageConversationId?.toString() !== conversation._id?.toString()) return;
+      dispatch(updateMessageStatus({
+        conversationId: conversation._id,
+        messageId,
+        status: updatedMessage?.status || 'delivered',
+        deliveredAt: updatedMessage?.deliveredAt,
+        readAt: updatedMessage?.readAt,
+      }));
+    };
+
+    const handleSocketConnect = () => {
+      refreshMessages();
+    };
+
+    socket.on('connect', handleSocketConnect);
     socket.on('newMessage', onNew);
+    socket.on('message-status-changed', onStatusChanged);
     return () => {
+      socket.off('connect', handleSocketConnect);
       socket.off('newMessage', onNew);
+      socket.off('message-status-changed', onStatusChanged);
+      socket.emit('conversation-closed', { conversationId: conversation._id });
       socket.emit('leaveConversation', { conversationId: conversation._id });
     };
-  }, [conversation, dispatch]);
+  }, [conversation, dispatch, userData?._id]);
 
   useEffect(() => {
     const el = containerRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages.length]);
+
 
   if (!conversation) {
     return (
@@ -109,7 +161,7 @@ export default function ChatWindow({ conversation }) {
                 <div className="break-words text-sm">{m.text}</div>
                 <div className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${mine ? 'text-sky-100' : 'text-slate-400 dark:text-slate-500'}`}>
                   <span>{formatMessageTime(m.createdAt)}</span>
-                  {mine && <span>{m.seenBy?.length ? 'Seen' : 'Delivered'}</span>}
+                  {mine && <span className={getStatusTextClassName(m)}>{getMessageStatusLabel(m)}</span>}
                 </div>
               </div>
             </div>

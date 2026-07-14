@@ -6,7 +6,7 @@ export default function MessageInput({ conversationId }) {
 
   const send = () => {
     if (!text.trim() || !socket) return;
-    socket.emit('sendMessage', { conversationId, text: text.trim() });
+    socket.emit('send-message', { conversationId, text: text.trim() });
     setText('');
   };
 

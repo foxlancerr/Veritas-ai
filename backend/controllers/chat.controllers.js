@@ -1,6 +1,5 @@
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
-import User from "../models/user.model.js";
 
 // Create or get a one-to-one conversation between two users
 export const createOrGetConversation = async (req, res) => {
@@ -9,7 +8,6 @@ export const createOrGetConversation = async (req, res) => {
     const { participantId } = req.body;
     if (!participantId) return res.status(400).json({ message: "participantId required" });
 
-    // Try to find existing conversation containing both users
     let conversation = await Conversation.findOne({
       participants: { $all: [currentUserId, participantId], $size: 2 },
     });
@@ -30,10 +28,10 @@ export const createOrGetConversation = async (req, res) => {
 export const getConversations = async (req, res) => {
   try {
     const userId = req.userId;
-      const conversations = await Conversation.find({ participants: userId })
-        .populate("participants", "firstName lastName profileImage userName lastSeen")
-        .populate("lastMessageSender", "firstName lastName profileImage")
-        .sort({ lastMessageAt: -1 });
+    const conversations = await Conversation.find({ participants: userId })
+      .populate("participants", "firstName lastName profileImage userName lastSeen")
+      .populate("lastMessageSender", "firstName lastName profileImage")
+      .sort({ lastMessageAt: -1 });
 
     res.json(conversations);
   } catch (error) {
@@ -55,9 +53,9 @@ export const getMessages = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("sender", "firstName lastName profileImage");
+      .populate("sender", "firstName lastName profileImage")
+      .populate("receiver", "firstName lastName profileImage");
 
-    // Return messages in chronological order
     res.json({ messages: messages.reverse(), page, limit });
   } catch (error) {
     console.error("getMessages", error);
@@ -72,16 +70,30 @@ export const sendMessage = async (req, res) => {
     const { conversationId, text } = req.body;
     if (!conversationId || !text) return res.status(400).json({ message: "conversationId and text required" });
 
-    const message = await Message.create({ conversationId, sender, text });
+    const conversation = await Conversation.findById(conversationId).select("participants");
+    if (!conversation) return res.status(404).json({ message: "Conversation not found" });
 
-    // update conversation
+    const receiver = conversation.participants.find((participantId) => participantId.toString() !== sender.toString());
+    if (!receiver) return res.status(400).json({ message: "Receiver not found" });
+
+    const message = await Message.create({
+      conversationId,
+      sender,
+      receiver,
+      text,
+      status: "sent",
+    });
+
     await Conversation.findByIdAndUpdate(conversationId, {
       lastMessage: text,
       lastMessageSender: sender,
       lastMessageAt: new Date(),
     });
 
-    const populated = await message.populate("sender", "firstName lastName profileImage");
+    const populated = await message.populate([
+      { path: "sender", select: "firstName lastName profileImage" },
+      { path: "receiver", select: "firstName lastName profileImage" },
+    ]);
     res.json({ message: populated });
   } catch (error) {
     console.error("sendMessage", error);
@@ -89,7 +101,7 @@ export const sendMessage = async (req, res) => {
   }
 };
 
-// Mark messages as seen by the logged-in user
+// Mark messages as read by the logged-in user
 export const markMessagesSeen = async (req, res) => {
   try {
     const userId = req.userId;
@@ -99,8 +111,8 @@ export const markMessagesSeen = async (req, res) => {
     }
 
     const result = await Message.updateMany(
-      { _id: { $in: messageIds }, conversationId },
-      { $addToSet: { seenBy: userId } }
+      { _id: { $in: messageIds }, conversationId, receiver: userId, status: { $ne: "read" } },
+      { $set: { status: "read", readAt: new Date() } }
     );
 
     res.json({ modifiedCount: result.modifiedCount || result.nModified || 0 });
