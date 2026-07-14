@@ -31,6 +31,41 @@ const removeSocketFromUser = (userId, socketId) => {
 
 const getOnlineUsers = () => Array.from(userSocketMap.keys());
 
+const getIdString = (value) => {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  if (typeof value === "object") {
+    if (value._id) {
+      return value._id.toString();
+    }
+    if (value.toString && value.toString !== Object.prototype.toString) {
+      const stringValue = value.toString();
+      if (stringValue && stringValue !== "[object Object]") {
+        return stringValue;
+      }
+    }
+  }
+  return null;
+};
+
+const broadcastMessageStatus = (io, conversationId, message) => {
+  const payload = { messageId: message._id, message };
+  const senderId = getIdString(message.sender);
+  const receiverId = getIdString(message.receiver);
+
+  if (senderId) {
+    io.to(getUserRoom(senderId)).emit("message-status-changed", payload);
+  }
+
+  if (receiverId) {
+    io.to(getUserRoom(receiverId)).emit("message-status-changed", payload);
+  }
+
+  if (conversationId) {
+    io.to(getConversationRoom(conversationId)).emit("message-status-changed", payload);
+  }
+};
+
 export function setupSocket(server) {
   const io = new Server(server, {
     cors: { origin: "http://localhost:5173", credentials: true },
@@ -73,45 +108,156 @@ export function setupSocket(server) {
       socket.emit("onlineUsers", getOnlineUsers());
     });
 
-    // Join a conversation room
     socket.on("joinConversation", ({ conversationId }) => {
       if (!conversationId) return;
       socket.join(getConversationRoom(conversationId));
     });
 
-    // Sending a chat message through socket
-    socket.on("sendMessage", async (data) => {
+    socket.on("conversation-opened", async ({ conversationId }) => {
+      if (!conversationId) return;
+
+      socket.activeConversationId = conversationId;
+      socket.join(getConversationRoom(conversationId));
+
+      const unreadMessages = await Message.find({
+        conversationId,
+        receiver: socket.userId,
+        status: { $ne: "read" },
+      });
+
+      if (!unreadMessages.length) return;
+
+      const unreadMessageIds = unreadMessages.map((message) => message._id);
+      const updatedMessages = await Message.updateMany(
+        { _id: { $in: unreadMessageIds }, status: { $ne: "read" } },
+        { $set: { status: "read", readAt: new Date() } }
+      );
+
+      if (!updatedMessages.modifiedCount && !updatedMessages.nModified) return;
+
+      const populatedMessages = await Message.find({ _id: { $in: unreadMessageIds } }).populate([
+        { path: "sender", select: "firstName lastName profileImage" },
+        { path: "receiver", select: "firstName lastName profileImage" },
+      ]);
+
+      populatedMessages.forEach((message) => {
+        broadcastMessageStatus(io, conversationId, message);
+      });
+    });
+
+    socket.on("conversation-closed", ({ conversationId }) => {
+      if (socket.activeConversationId && socket.activeConversationId.toString() === conversationId?.toString()) {
+        socket.activeConversationId = null;
+      }
+    });
+
+    const handleSendMessage = async (data) => {
       try {
         const { conversationId, text } = data;
         if (!conversationId || !text) return;
 
-        // persist message
-        const msg = await Message.create({ conversationId, sender: socket.userId, text });
+        const conversation = await Conversation.findById(conversationId).select("participants");
+        if (!conversation) return;
 
-        // update conversation
+        const receiver = conversation.participants.find((participantId) => participantId.toString() !== socket.userId.toString());
+        if (!receiver) return;
+
+        const msg = await Message.create({
+          conversationId,
+          sender: socket.userId,
+          receiver,
+          text,
+          status: "sent",
+        });
+
         await Conversation.findByIdAndUpdate(conversationId, {
           lastMessage: text,
           lastMessageSender: socket.userId,
           lastMessageAt: new Date(),
         });
 
-        const populated = await msg.populate("sender", "firstName lastName profileImage");
+        const populated = await msg.populate([
+          { path: "sender", select: "firstName lastName profileImage" },
+          { path: "receiver", select: "firstName lastName profileImage" },
+        ]);
 
-        // emit to all sockets in the conversation room
         io.to(getConversationRoom(conversationId)).emit("newMessage", { message: populated });
 
-        // also notify participant user rooms about updated conversation (list refresh)
-        const conv = await Conversation.findById(conversationId).select("participants");
-        if (conv && conv.participants && conv.participants.length) {
-          conv.participants.forEach((p) => {
-            const id = p.toString();
-            io.to(getUserRoom(id)).emit("conversationUpdated", { conversationId, lastMessage: text, lastMessageAt: new Date() });
-          });
-        }
+        conversation.participants.forEach((participantId) => {
+          const id = participantId.toString();
+          io.to(getUserRoom(id)).emit("conversationUpdated", { conversationId, lastMessage: text, lastMessageAt: new Date() });
+        });
       } catch (error) {
         console.error("socket sendMessage error:", error);
       }
-    });
+    };
+
+    socket.on("sendMessage", handleSendMessage);
+    socket.on("send-message", handleSendMessage);
+
+    const handleMessageDelivered = async ({ messageId }) => {
+      try {
+        if (!messageId) return;
+
+        const updatedMessage = await Message.findOneAndUpdate(
+          {
+            _id: messageId,
+            receiver: socket.userId,
+            status: { $in: ["sent"] },
+          },
+          { status: "delivered", deliveredAt: new Date() },
+          { new: true }
+        ).populate([
+          { path: "sender", select: "firstName lastName profileImage" },
+          { path: "receiver", select: "firstName lastName profileImage" },
+        ]);
+
+        if (updatedMessage) {
+          broadcastMessageStatus(io, updatedMessage.conversationId, updatedMessage);
+        }
+      } catch (error) {
+        console.error("socket messageDelivered error:", error);
+      }
+    };
+
+    socket.on("messageDelivered", handleMessageDelivered);
+    socket.on("message-delivered", handleMessageDelivered);
+
+    const handleMessageRead = async ({ conversationId, messageIds }) => {
+      try {
+        if (!conversationId) return;
+
+        const query = { conversationId, receiver: socket.userId, status: { $ne: "read" } };
+        if (Array.isArray(messageIds) && messageIds.length) {
+          query._id = { $in: messageIds };
+        }
+
+        const unreadMessages = await Message.find(query);
+        if (!unreadMessages.length) return;
+
+        const unreadMessageIds = unreadMessages.map((message) => message._id);
+        const updatedMessages = await Message.updateMany(
+          { _id: { $in: unreadMessageIds } },
+          { $set: { status: "read", readAt: new Date() } }
+        );
+
+        if (!updatedMessages.modifiedCount && !updatedMessages.nModified) return;
+
+        const populatedMessages = await Message.find({ _id: { $in: unreadMessageIds } }).populate([
+          { path: "sender", select: "firstName lastName profileImage" },
+          { path: "receiver", select: "firstName lastName profileImage" },
+        ]);
+
+        populatedMessages.forEach((message) => {
+          broadcastMessageStatus(io, conversationId, message);
+        });
+      } catch (error) {
+        console.error("socket messageRead error:", error);
+      }
+    };
+
+    socket.on("messageRead", handleMessageRead);
+    socket.on("message-read", handleMessageRead);
 
     // typing indicator
     socket.on("typing", ({ conversationId }) => {
