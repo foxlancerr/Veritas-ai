@@ -4,22 +4,16 @@ import { useNavigate } from "react-router-dom";
 import apiHelpers from "../../api/apiHelper";
 
 const ConnectionButton = ({ userId }) => {
-  const { userData, setUserData } = useContext(UserDataContext);
+  const { userData } = useContext(UserDataContext);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // --- Send connection
   const handleSendConnection = async () => {
     try {
       setLoading(true);
-      const result = await apiHelpers.post(
-        `/connection/send/${userId}`,
-        {},
-        { withCredentials: true }
-      );
- 
-      await handleGetStatus(); // Refresh status
+      await apiHelpers.post(`/connection/send/${userId}`, {}, { withCredentials: true });
+      await handleGetStatus();
     } catch (error) {
       console.log(error);
     } finally {
@@ -27,16 +21,11 @@ const ConnectionButton = ({ userId }) => {
     }
   };
 
-  // --- Remove connection
   const handleRemoveConnection = async () => {
     try {
       setLoading(true);
-      const result = await apiHelpers.delete(
-        `/connection/remove/${userId}`,
-        { withCredentials: true }
-      );
-     
-      await handleGetStatus(); // Refresh status
+      await apiHelpers.delete(`/connection/remove/${userId}`, { withCredentials: true });
+      await handleGetStatus();
     } catch (error) {
       console.log(error);
     } finally {
@@ -44,22 +33,16 @@ const ConnectionButton = ({ userId }) => {
     }
   };
 
-  // --- Get current connection status
   const handleGetStatus = async () => {
     if (!userData?._id) return;
     try {
-      const result = await apiHelpers.get(
-        `/connection/get-status/${userId}`,
-        { withCredentials: true }
-      );
+      const result = await apiHelpers.get(`/connection/get-status/${userId}`, { withCredentials: true });
       setStatus(result.status);
-      console.log(result);
     } catch (error) {
       console.log(error);
     }
   };
 
-  // --- Socket.io integration
   useEffect(() => {
     if (!userData?._id) return;
 
@@ -78,7 +61,6 @@ const ConnectionButton = ({ userId }) => {
     };
   }, [userId, userData?._id]);
 
-  // --- Button click handler
   const handleClickbutton = async () => {
     if (status === "disconnect") {
       await handleRemoveConnection();
@@ -89,9 +71,18 @@ const ConnectionButton = ({ userId }) => {
     }
   };
 
+  const buttonVariant =
+    status === "disconnect"
+      ? "border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-300"
+      : status === "received"
+      ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300"
+      : status === "pending"
+      ? "border-slate-300 bg-slate-100 text-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400"
+      : "border-sky-500/70 bg-sky-50 text-sky-700 hover:bg-sky-100 dark:border-sky-500/50 dark:bg-sky-500/10 dark:text-sky-300";
+
   return (
     <button
-      className="w-[120px] h-[42px] rounded-full border-2 cursor-pointer border-[#2dc0ff] text-[#2dc0ff] font-semibold hover:bg-[#2dc0ff] hover:text-white transition duration-300 ease-in-out shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+      className={`control-ring h-[42px] w-[120px] rounded-full border px-3 py-2 text-sm font-semibold shadow-sm transition duration-300 ease-in-out disabled:cursor-not-allowed disabled:opacity-50 ${buttonVariant}`}
       onClick={handleClickbutton}
       disabled={status === "pending" || loading}
     >

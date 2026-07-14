@@ -140,34 +140,34 @@ const Posts = ({
     setLikes(like);
     setComments(comment);
   }, [like, comment]);
+
   return (
-    <div className="w-full bg-white dark:bg-[#1a1a1a] rounded-xl shadow-md p-6 flex flex-col gap-5 border border-gray-200 dark:border-gray-700 ">
-      {/* Author Info */}
-      <div className="flex justify-between items-start">
+    <article className="glass-panel fade-in flex w-full flex-col gap-5 p-5 sm:p-6">
+      <div className="flex items-start justify-between gap-3">
         <div
-          className="flex gap-4 cursor-pointer"
+          className="flex cursor-pointer gap-3"
           onClick={() => handleGetProfile(author.userName, navigate)}
         >
-          <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-lg">
-            <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-black">
+          <div className="relative h-14 w-14 rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-pink-500 p-[2px] shadow-lg shadow-sky-500/20">
+            <div className="h-full w-full overflow-hidden rounded-full bg-white dark:bg-black">
               <img
                 src={author.profileImage || emptyDp}
                 alt={`${author.firstName} ${author.lastName}`}
-                className="w-full h-full object-cover rounded-full"
+                className="h-full w-full rounded-full object-cover"
               />
             </div>
             {onlineUsers.includes(author._id.toString()) && (
-              <span className="absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white dark:border-black bg-emerald-500 shadow-lg" />
+              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500 shadow-lg dark:border-slate-950" />
             )}
           </div>
-          <div>
-            <h2 className="text-lg font-bold hover:underline hover:text-blue-600 dark:text-white transition">
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold text-slate-900 transition hover:text-sky-600 hover:underline dark:text-white">
               {author.firstName} {author.lastName}
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               {author.headline}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500">
+            <p className="text-xs text-slate-500 dark:text-slate-500">
               {moment(createdAt).fromNow()}
             </p>
           </div>
@@ -179,48 +179,39 @@ const Posts = ({
           userData={userData}
           author={author}
         />
-
-       
       </div>
 
-      {/* Description */}
       <div
-        className={`pl-4 text-sm text-gray-800 dark:text-gray-200 ${
+        className={`pl-1 text-sm leading-7 text-slate-700 dark:text-slate-200 ${
           readMore ? "" : "line-clamp-3"
         }`}
       >
-        <div className="prose dark:prose-invert">
+        <div className="prose max-w-none dark:prose-invert">
           <ReactMarkdown>{description}</ReactMarkdown>
         </div>
       </div>
       {description.length > 200 && (
         <button
-          className="text-blue-500 hover:underline text-sm font-medium w-fit ml-4"
+          className="ml-1 w-fit text-sm font-semibold text-sky-600 transition hover:text-sky-700 dark:text-sky-400"
           onClick={() => setReadMore((prev) => !prev)}
         >
           {readMore ? "Read less" : "Read more"}
         </button>
       )}
 
-      {/* Image */}
       {image && (
-        <div className="w-full h-[300px] rounded-lg overflow-hidden flex justify-center">
-          <img
-            src={image}
-            alt="Post visual"
-            className="h-full object-cover rounded-lg"
-          />
+        <div className="flex h-[280px] w-full items-center justify-center overflow-hidden rounded-[22px] bg-slate-100 dark:bg-slate-800/80 sm:h-[320px]">
+          <img src={image} alt="Post visual" className="h-full w-full object-cover" />
         </div>
       )}
 
-      {/* Likes & Comments Count */}
-      <div className="w-full flex justify-between items-center border-b dark:border-gray-700 pb-2 text-sm text-gray-700 dark:text-gray-300">
+      <div className="flex items-center justify-between border-b border-slate-200/70 pb-3 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300">
         <div className="flex items-center gap-2">
-          <BiLike className="text-blue-500 w-5 h-5" />
+          <BiLike className="h-5 w-5 text-sky-500" />
           <span>{likes.length} Likes</span>
         </div>
         <div
-          className="flex items-center gap-2 cursor-pointer hover:text-blue-500"
+          className="flex cursor-pointer items-center gap-2 transition hover:text-sky-600"
           onClick={() => setShowComments((prev) => !prev)}
         >
           <span>{comments.length}</span>
@@ -228,86 +219,82 @@ const Posts = ({
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-6 text-sm font-medium text-gray-700 dark:text-gray-300">
+      <div className="flex flex-wrap items-center gap-3 text-sm font-medium text-slate-700 dark:text-slate-200">
         <button
-          className="flex items-center gap-1 hover:text-blue-500 transition"
+          className="control-ring flex items-center gap-2 rounded-full px-3 py-2 transition hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-500/10"
           onClick={handleLikePost}
         >
           {likes.includes(userData._id) ? (
             <>
-              <BiSolidLike className="w-5 h-5 text-blue-500" />
+              <BiSolidLike className="h-5 w-5 text-sky-500" />
               <span>Liked</span>
             </>
           ) : (
             <>
-              <BiLike className="w-5 h-5" />
+              <BiLike className="h-5 w-5" />
               <span>Like</span>
             </>
           )}
         </button>
 
         <button
-          className="flex items-center gap-1 hover:text-blue-500 transition"
+          className="control-ring flex items-center gap-2 rounded-full px-3 py-2 transition hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-500/10"
           onClick={() => setShowComments((prev) => !prev)}
         >
-          <FaRegCommentDots className="w-5 h-5" />
+          <FaRegCommentDots className="h-5 w-5" />
           <span>Comment</span>
         </button>
 
         <button
-          type="button" // Important: type="button" so it doesn't submit the form
+          type="button"
           onClick={handleAiComment}
-          className={`p-1 rounded-full transition ${isAiLoading ? "animate-pulse text-purple-300" : "text-purple-600 hover:bg-purple-100 dark:hover:bg-purple-900"}`}
+          className={`control-ring rounded-full p-2 transition ${isAiLoading ? "animate-pulse text-purple-300" : "text-purple-600 hover:bg-purple-100 dark:hover:bg-purple-900"}`}
           title="Generate AI Comment"
           disabled={isAiLoading}
         >
-          <RiAiGenerate className="w-5 h-5" />
+          <RiAiGenerate className="h-5 w-5" />
         </button>
       </div>
 
-      {/* Comments Section */}
       {showComments && (
-        <div className="mt-4">
-          {/* Comment Form */}
+        <div className="mt-1 rounded-[22px] border border-slate-200/70 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-900/60">
           <form
-            className="flex items-center gap-2 border dark:border-gray-700 rounded-md px-3 py-2"
+            className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-950"
             onSubmit={handleCommentPost}
           >
             <input
               type="text"
               placeholder="Write a comment..."
-              className="flex-grow outline-none text-sm dark:bg-transparent dark:text-white"
+              className="flex-grow bg-transparent text-sm text-slate-800 outline-none dark:text-white"
               value={commentContent}
               onChange={(e) => setCommentContent(e.target.value)}
             />
-            <button type="submit">
-              <LuSendHorizontal className="text-blue-500 w-5 h-5 cursor-pointer" />
+            <button type="submit" className="control-ring rounded-full p-2 text-sky-600 transition hover:bg-sky-50 dark:hover:bg-slate-800">
+              <LuSendHorizontal className="h-5 w-5 cursor-pointer" />
             </button>
           </form>
 
-          {/* Comment List */}
-          <div className="flex flex-col gap-4 mt-4">
+          <div className="mt-4 flex flex-col gap-4">
             {comments.map((com, index) => (
               <div
                 key={index}
-                className="flex gap-3 border-b dark:border-gray-700 pb-3"
+                className="flex gap-3 border-b border-slate-200/70 pb-3 last:border-b-0 dark:border-slate-700"
               >
                 <img
                   src={com.user.profileImage || emptyDp}
                   alt={`${com.user.firstName} ${com.user.lastName}`}
-                  className="w-12 h-12 rounded-full object-cover"
+                  className="h-11 w-11 rounded-full object-cover"
                 />
                 <div className="flex-1">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-semibold text-sm hover:text-blue-600 transition cursor-pointer dark:text-white">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="cursor-pointer text-sm font-semibold text-slate-900 transition hover:text-sky-600 dark:text-white">
                       {com.user.firstName} {com.user.lastName}
                     </h4>
-                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                    <span className="text-xs text-slate-400 dark:text-slate-500">
                       {moment(com.createdAt).fromNow()}
                     </span>
                   </div>
-                  <p className="text-sm mt-1 text-gray-800 dark:text-gray-200">
+                  <p className="mt-1 text-sm text-slate-700 dark:text-slate-200">
                     <ReactMarkdown>{com.content}</ReactMarkdown>
                   </p>
                 </div>
@@ -316,7 +303,7 @@ const Posts = ({
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 };
 
