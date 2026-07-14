@@ -1,5 +1,6 @@
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
+import { summarizeConversation, generateReplySuggestions } from "../config/aiModal.js";
 
 // Create or get a one-to-one conversation between two users
 export const createOrGetConversation = async (req, res) => {
@@ -119,5 +120,97 @@ export const markMessagesSeen = async (req, res) => {
   } catch (error) {
     console.error("markMessagesSeen", error);
     res.status(500).json({ error: "Failed to mark messages seen" });
+  }
+};
+
+// Summarize conversation using AI
+export const summarizeConv = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.userId;
+
+    if (!conversationId) {
+      return res.status(400).json({ message: "conversationId required" });
+    }
+
+    // Verify user is part of the conversation
+    const conversation = await Conversation.findById(conversationId).select("participants");
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    const isParticipant = conversation.participants.some((p) => p.toString() === userId.toString());
+    if (!isParticipant) {
+      return res.status(403).json({ message: "You are not a member of this conversation" });
+    }
+
+    // Get all messages in the conversation
+    const messages = await Message.find({ conversationId })
+      .sort({ createdAt: 1 })
+      .populate("sender", "firstName lastName");
+
+    if (!messages || messages.length === 0) {
+      return res.status(400).json({ message: "No messages to summarize" });
+    }
+
+    // Generate summary using AI
+    const summary = await summarizeConversation(messages);
+
+    if (!summary) {
+      return res.status(500).json({ message: "Failed to generate summary" });
+    }
+
+    res.json({ success: true, summary });
+  } catch (error) {
+    console.error("summarizeConv", error);
+    res.status(500).json({ error: "Failed to summarize conversation" });
+  }
+};
+
+// Generate AI-powered reply suggestions based on conversation context
+export const getReplySuggestions = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.userId;
+
+    if (!conversationId) {
+      return res.status(400).json({ message: "conversationId required" });
+    }
+
+    // Verify user is part of the conversation
+    const conversation = await Conversation.findById(conversationId).select("participants");
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    const isParticipant = conversation.participants.some((p) => p.toString() === userId.toString());
+    if (!isParticipant) {
+      return res.status(403).json({ message: "You are not a member of this conversation" });
+    }
+
+    // Get recent messages (last 20) to provide context
+    const messages = await Message.find({ conversationId })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .populate("sender", "firstName lastName");
+
+    if (!messages || messages.length < 1) {
+      return res.status(400).json({ message: "No messages to generate suggestions from" });
+    }
+
+    // Reverse to get chronological order
+    const orderedMessages = messages.reverse();
+
+    // Generate suggestions using AI
+    const suggestions = await generateReplySuggestions(orderedMessages);
+
+    if (!suggestions || suggestions.length === 0) {
+      return res.status(500).json({ message: "Failed to generate suggestions" });
+    }
+
+    res.json({ success: true, suggestions });
+  } catch (error) {
+    console.error("getReplySuggestions", error);
+    res.status(500).json({ error: "Failed to generate reply suggestions" });
   }
 };

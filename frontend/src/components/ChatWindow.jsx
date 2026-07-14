@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useContext } from 'react';
+import React, { useEffect, useRef, useContext, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMessages, addMessage, updateMessageStatus } from '../features/messages/messagesSlice';
 import MessageInput from './MessageInput';
+import ConversationSummaryModal from './ConversationSummaryModal';
 import { socket, UserDataContext } from '../context/UserContext';
 
 const formatMessageTime = (value) => {
@@ -50,6 +51,7 @@ export default function ChatWindow({ conversation }) {
   const dispatch = useDispatch();
   const messages = useSelector(s => (conversation ? s.messages.byConversation[conversation._id] || [] : []));
   const containerRef = useRef();
+  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
 
   const previousConversationRef = useRef(null);
   const deliveredMessageIdsRef = useRef(new Set());
@@ -137,19 +139,28 @@ export default function ChatWindow({ conversation }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center gap-3 border-b border-slate-200 bg-white/90 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/90">
-        <div className="relative h-11 w-11 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-          <img src={other.profileImage || '/logo.svg'} alt="avatar" className="h-full w-full object-cover" />
-          <span className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-slate-900 ${isOnline ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-        </div>
-        <div className="flex-1">
-          <div className="font-semibold text-slate-800 dark:text-slate-100">
-            {other.firstName ? `${other.firstName} ${other.lastName}` : other.userName || 'Unknown'}
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-4 py-3 dark:border-slate-700 dark:bg-slate-900/90">
+        <div className="flex flex-1 items-center gap-3">
+          <div className="relative h-11 w-11 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
+            <img src={other.profileImage || '/logo.svg'} alt="avatar" className="h-full w-full object-cover" />
+            <span className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white dark:border-slate-900 ${isOnline ? 'bg-emerald-500' : 'bg-slate-400'}`} />
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400">
-            {isOnline ? 'Online' : formatLastSeen(otherLastSeen)}
+          <div className="flex-1">
+            <div className="font-semibold text-slate-800 dark:text-slate-100">
+              {other.firstName ? `${other.firstName} ${other.lastName}` : other.userName || 'Unknown'}
+            </div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">
+              {isOnline ? 'Online' : formatLastSeen(otherLastSeen)}
+            </div>
           </div>
         </div>
+        <button
+          onClick={() => setSummaryModalOpen(true)}
+          className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
+          title="Summarize this conversation"
+        >
+          Summarize
+        </button>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto bg-slate-50 p-3 sm:p-4 dark:bg-slate-950" ref={containerRef}>
@@ -169,6 +180,11 @@ export default function ChatWindow({ conversation }) {
         })}
       </div>
       <MessageInput conversationId={conversation._id} />
+      <ConversationSummaryModal 
+        isOpen={summaryModalOpen} 
+        onClose={() => setSummaryModalOpen(false)} 
+        conversationId={conversation._id} 
+      />
     </div>
   );
 }
