@@ -21,6 +21,7 @@ import PublicRoute from "./layout/PublicRoute";
 import UserContextProvider from "./context/UserContext";
 import { NotificationContextProvider } from "./context/notificationContext";
 import ChatApp from "./components/ChatApp";
+import NotFound from "./pages/NotFound";
 
 const AppRoutes = () => {
   return (
@@ -51,6 +52,8 @@ const AppRoutes = () => {
           <Route path="/messages" element={<Messages />} />
         </Route>
       </Route>
+      {/* not found route */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
