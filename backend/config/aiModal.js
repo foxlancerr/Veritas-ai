@@ -142,7 +142,7 @@ Generate exactly 3-5 suggestions. Never more, never less.`;
   try {
     const response = await generateAIContent(
       userPrompt,
-      250,
+      500,
       true,
       systemPrompt
     );

@@ -30,6 +30,14 @@ const Chatbot = () => {
   const [isConnected, setIsConnected] = useState(false);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
+  const responseTimeoutRef = useRef(null);
+
+  const clearResponseTimeout = () => {
+    if (responseTimeoutRef.current) {
+      clearTimeout(responseTimeoutRef.current);
+      responseTimeoutRef.current = null;
+    }
+  };
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -64,6 +72,17 @@ const Chatbot = () => {
     socketRef.current.on("disconnect", () => {
       console.log("Chatbot WebSocket disconnected");
       setIsConnected(false);
+      if (responseTimeoutRef.current) {
+        clearResponseTimeout();
+        setIsTyping(false);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "bot",
+            content: "Connection lost before I received a reply. Please try again after reconnecting.",
+          },
+        ]);
+      }
     });
 
     socketRef.current.on("connect_error", (err) => {
@@ -73,12 +92,18 @@ const Chatbot = () => {
 
     // Listen for bot replies
     socketRef.current.on("bot-reply", (data) => {
-      setMessages((prev) => [...prev, { role: "bot", content: data.content }]);
+      clearResponseTimeout();
+      const content =
+        typeof data?.content === "string" && data.content.trim()
+          ? data.content
+          : "I couldn't generate a response. Please try again.";
+      setMessages((prev) => [...prev, { role: "bot", content }]);
       setIsTyping(false);
     });
 
     // Cleanup on unmount
     return () => {
+      clearResponseTimeout();
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
@@ -98,13 +123,25 @@ const Chatbot = () => {
       return false;
     }
     socketRef.current.emit("chat-message", { message, intent });
+    clearResponseTimeout();
+    responseTimeoutRef.current = setTimeout(() => {
+      responseTimeoutRef.current = null;
+      setIsTyping(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          content: "This is taking longer than expected. Please try again.",
+        },
+      ]);
+    }, 60000);
     return true;
   };
 
   // Handle user sending a message
   const handleSend = async () => {
     const trimmedInput = input.trim();
-    if (!trimmedInput || !isConnected) return;
+    if (!trimmedInput || !isConnected || isTyping) return;
 
     // Add user message
     setMessages((prev) => [...prev, { role: "user", content: trimmedInput }]);
@@ -112,11 +149,12 @@ const Chatbot = () => {
     setIsTyping(true);
 
     // Send to backend
-    sendMessage(trimmedInput, null);
+    if (!sendMessage(trimmedInput, null)) setIsTyping(false);
   };
 
   // Handle quick action buttons
   const handleQuickAction = (intent, promptText) => {
+    if (isTyping) return;
     if (!isConnected) {
       setMessages((prev) => [
         ...prev,
@@ -135,7 +173,7 @@ const Chatbot = () => {
     setIsTyping(true);
 
     // Send intent to backend (message can be empty or a hint)
-    sendMessage(promptText, intent);
+    if (!sendMessage(promptText, intent)) setIsTyping(false);
   };
 
   // Handle Enter key
@@ -282,7 +320,7 @@ const Chatbot = () => {
               <button
                 key={idx}
                 onClick={() => handleQuickAction(action.intent, action.prompt)}
-                disabled={!isConnected}
+                disabled={!isConnected || isTyping}
                 className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="text-blue-500">{action.icon}</span>
